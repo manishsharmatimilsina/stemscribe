@@ -1,0 +1,58 @@
+{% extends "core/student_base.html" %}
+{% block title %}How Work Is Evaluated — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">How your work is evaluated</div>
+    <div class="page-subtitle">Our system reviews your work across three core areas to support high-quality scientific thinking and communication.</div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:1.5rem">
+    <div class="pillar pillar-u">
+      <div class="pillar-title">1) Understanding</div>
+      <div class="pillar-subtitle">Is your science correct and conceptually sound?</div>
+      <p style="font-size:13px;color:var(--u-text);margin-bottom:.75rem">We assess whether your work demonstrates accurate knowledge and clear understanding of scientific ideas.</p>
+      <ul class="pillar-items">
+        {% for item in rubric_understanding %}
+        <li>
+          <span>{{ item.name }}</span>
+          <span class="score-dot dot-mid"></span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="pillar pillar-a">
+      <div class="pillar-title">2) Analysis</div>
+      <div class="pillar-subtitle">Is your thinking logical, critical and evidence-based?</div>
+      <p style="font-size:13px;color:var(--a-text);margin-bottom:.75rem">We evaluate how well you interpret data, construct arguments and justify your conclusions.</p>
+      <ul class="pillar-items">
+        {% for item in rubric_analysis %}
+        <li>
+          <span>{{ item.name }}</span>
+          <span class="score-dot dot-mid"></span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="pillar pillar-c">
+      <div class="pillar-title">3) Communication</div>
+      <div class="pillar-subtitle">Is your work structured and professional?</div>
+      <p style="font-size:13px;color:var(--c-text);margin-bottom:.75rem">We assess how effectively you present your ideas in a scientific format.</p>
+      <ul class="pillar-items">
+        {% for item in rubric_communication %}
+        <li>
+          <span>{{ item.name }}</span>
+          <span class="score-dot dot-high"></span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size:14px;color:var(--text-muted)">Each area reflects key skills used in real STEM research and collaboration. Scores update every time AI or a peer reviews your work.</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "core/student_base.html" %}
+{% block title %}My Dashboard — {{ doc.title }} — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">My Dashboard</div>
+    <div class="page-subtitle">{{ doc.title }} — your progress and classroom impact</div>
+  </div>
+
+  <!-- Overall Score Banner -->
+  <div class="card" style="display:flex;align-items:center;gap:2rem;margin-bottom:1.25rem;flex-wrap:wrap">
+    <div style="font-family:'DM Serif Display',serif;font-size:3.5rem;font-weight:400;color:var(--accent);line-height:1">
+      +{{ improvement }}
+    </div>
+    <div style="flex:1">
+      <div style="font-size:1rem;font-weight:500;margin-bottom:.2rem">Overall improvement score</div>
+      <div style="font-size:13px;color:var(--text-muted)">Across {{ versions|length }} version{{ versions|length|pluralize }} of your report</div>
+    </div>
+    <div style="display:flex;gap:.65rem;flex-wrap:wrap">
+      <div class="pillar pillar-u" style="border-radius:8px;padding:.85rem;min-width:100px">
+        <div class="pillar-title" style="font-size:12px">Understanding</div>
+        <div class="pillar-score" style="font-size:1.4rem">+{{ u_improvement }}</div>
+      </div>
+      <div class="pillar pillar-a" style="border-radius:8px;padding:.85rem;min-width:100px">
+        <div class="pillar-title" style="font-size:12px">Analysis</div>
+        <div class="pillar-score" style="font-size:1.4rem">+{{ a_improvement }}</div>
+      </div>
+      <div class="pillar pillar-c" style="border-radius:8px;padding:.85rem;min-width:100px">
+        <div class="pillar-title" style="font-size:12px">Communication</div>
+        <div class="pillar-score" style="font-size:1.4rem">+{{ c_improvement }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:1.25rem">
+    <!-- Score progression -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Score change over time</div>
+      </div>
+      {% for v, score in version_scores %}
+      <div style="margin-bottom:.65rem">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:.3rem">
+          <span>{{ v.get_version_type_display }} ({{ v.created_at|date:"j M" }})</span>
+          <span style="font-weight:600;color:var(--text)">{% if score %}{{ score }}%{% else %}—{% endif %}</span>
+        </div>
+        {% if score %}
+        <div class="pbar-outer">
+          <div class="pbar-inner" style="width:{{ score }}%"></div>
+        </div>
+        {% else %}
+        <div class="pbar-outer"><div class="pbar-inner" style="width:0%"></div></div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Classroom impact -->
+    <div class="card">
+      <div class="section-title" style="margin-bottom:.9rem">Classroom Impact</div>
+      <p style="font-size:13px;margin-bottom:.85rem">
+        You helped <strong>{{ peer_edits_given.count }}</strong> peer{{ peer_edits_given.count|pluralize }} improve their work!
+      </p>
+      <div style="font-size:13px;margin-bottom:.75rem">
+        Total impact: <strong style="color:var(--accent)">+{{ total_impact }} pts</strong>
+      </div>
+      <div style="font-size:13px;display:flex;flex-direction:column;gap:.25rem">
+        <div>✓ Understanding: <strong>+{{ peer_edits_given|length|default:0 }}</strong></div>
+        <div>✓ Analysis: <strong>+{{ peer_edits_given|length|default:0 }}</strong></div>
+        <div>✓ Communication: <strong>+{{ peer_edits_given|length|default:0 }}</strong></div>
+      </div>
+
+      <!-- Chain impact -->
+      <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border)">
+        <div class="section-title" style="margin-bottom:.65rem">Chain impact</div>
+        <div class="chain-flow">
+          <div class="chain-student">
+            <div class="chain-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+            <div class="chain-name">You</div>
+          </div>
+          <div class="chain-arrow-wrap">
+            <div class="chain-score-label">+8</div>
+            <div class="chain-line"></div>
+          </div>
+          <div class="chain-student">
+            <div class="chain-avatar">B</div>
+            <div class="chain-name">Peer B</div>
+          </div>
+          <div class="chain-arrow-wrap">
+            <div class="chain-score-label">+5</div>
+            <div class="chain-line"></div>
+          </div>
+          <div class="chain-student">
+            <div class="chain-avatar">C</div>
+            <div class="chain-name">Peer C</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">Your edits enabled +5 additional improvements</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collaborator Level -->
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Collaborator Level</div>
+    <div class="expertise-bar">
+      <div class="expertise-labels">
+        <span>Beginner</span><span>Intermediate</span><span>Advanced</span>
+      </div>
+      <div class="expertise-track">
+        <div class="expertise-fill" style="width:{{ expertise_pct }}%">
+          <div class="expertise-marker"></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:.65rem">Help more peers and make a bigger impact!</p>
+  </div>
+
+</div>
+{% endblock %}

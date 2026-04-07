@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block sidebar_sub %}Teacher Portal{% endblock %}
+{% block sidebar_role %}Science Dept. · Imperial{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sb-section">
+  <div class="sb-section-label">Classes</div>
+  <a href="{% url 'teacher_dashboard' %}" class="sb-item {% if page == 'dashboard' %}active{% endif %}">
+    <span class="sb-icon">◈</span> BIOL 201 — Biochemistry
+  </a>
+  <a href="{% url 'teacher_dashboard' %}" class="sb-item">
+    <span class="sb-icon">◈</span> CHEM 304 — Org. Chem
+  </a>
+</div>
+
+<div class="sb-section">
+  <div class="sb-section-label">Tools</div>
+  <a href="{% url 'teacher_stats' %}" class="sb-item {% if page == 'stats' %}active{% endif %}">
+    <span class="sb-icon">📊</span> Dashboard
+  </a>
+  <a href="{% url 'teacher_feedback' %}" class="sb-item {% if page == 'feedback' %}active{% endif %}">
+    <span class="sb-icon">✎</span> Class feedback
+  </a>
+  <a href="{% url 'teacher_upload' %}" class="sb-item {% if page == 'upload' %}active{% endif %}">
+    <span class="sb-icon">↑</span> Upload documents
+  </a>
+  <a href="{% url 'teacher_rubric' %}" class="sb-item {% if page == 'rubric' %}active{% endif %}">
+    <span class="sb-icon">✏</span> Rubric editor
+  </a>
+</div>
+
+<div class="sb-section">
+  <div class="sb-section-label">Students</div>
+  {% for s in students %}
+  <a href="{% url 'teacher_student' s.pk %}" class="sb-item {% if page == 'student' and selected_student.pk == s.pk %}active{% endif %}">
+    <span class="sb-icon">👤</span> {{ s.get_full_name|default:s.username|truncatechars:20 }}
+  </a>
+  {% empty %}
+  <div class="sb-item" style="color:#555;cursor:default">No students yet</div>
+  {% endfor %}
+</div>
+{% endblock %}

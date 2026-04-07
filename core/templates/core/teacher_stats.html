@@ -1,0 +1,42 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Class Statistics — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Class Statistics</div>
+    <div class="page-subtitle">Individual student breakdown</div>
+  </div>
+
+  <div class="card" style="padding:0">
+    <div class="student-row" style="background:var(--bg);border-radius:10px 10px 0 0;cursor:default">
+      <div style="width:32px"></div>
+      <div class="student-info">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Student</div>
+      </div>
+      <div class="mini-scores">
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);width:90px;text-align:center">Scores</span>
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);width:60px;text-align:right">Impact</span>
+      </div>
+    </div>
+    {% for s in student_data %}
+    <a href="{% url 'teacher_student' s.user.pk %}" class="student-row" style="text-decoration:none;color:inherit">
+      <div class="sb-avatar" style="width:32px;height:32px;font-size:11px">
+        {{ s.user.first_name|first|upper }}{{ s.user.last_name|first|upper|default:s.user.username|first|upper }}
+      </div>
+      <div class="student-info">
+        <div class="student-name-cell">{{ s.user.get_full_name|default:s.user.username }}</div>
+        <div class="student-meta-cell">{{ s.doc_count }} doc{{ s.doc_count|pluralize }} submitted</div>
+      </div>
+      <div class="mini-scores">
+        <span class="ms ms-u">{{ s.u_score|default:"—" }}{% if s.u_score %}%{% endif %}</span>
+        <span class="ms ms-a">{{ s.a_score|default:"—" }}{% if s.a_score %}%{% endif %}</span>
+        <span class="ms ms-c">{{ s.c_score|default:"—" }}{% if s.c_score %}%{% endif %}</span>
+        <span style="font-size:13px;font-weight:600;color:var(--accent);min-width:45px;text-align:right">+{{ s.impact }}</span>
+      </div>
+    </a>
+    {% empty %}
+    <div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:14px">No students have submitted work yet.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

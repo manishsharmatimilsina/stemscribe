@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StemScribe — Structured edits, real impact</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0;--bg-card:#fff;--text:#1a1a1a;--text-muted:#6b6b6b;
+  --border:#e2ddd5;--border-dark:#c8c2b8;
+  --accent:#2d5a27;--accent-mid:#639922;--accent-light:#eaf3de;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── HERO ── */
+.hero{background:#1a1a1a;color:#e8e4dc;padding:4.5rem 2rem 3.5rem;text-align:center}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:400;letter-spacing:-.02em;margin-bottom:.9rem}
+.hero h1 em{font-style:italic;color:#9fca6e}
+.hero p{font-size:1rem;color:#888;max-width:480px;margin:0 auto 2.5rem}
+
+/* ── BEFORE/AFTER SLIDER ── */
+.slider-container{
+  max-width:680px;margin:0 auto;
+  background:#1e1e1e;border:1px solid #333;border-radius:12px;
+  padding:1.5rem;text-align:left;position:relative;overflow:hidden
+}
+.slider-labels{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:1rem}
+.slider-labels span.active{color:#9fca6e}
+
+/* The actual range slider */
+.ba-slider{
+  position:relative;height:220px;overflow:hidden;border-radius:8px;
+  border:1px solid #333;cursor:ew-resize;user-select:none
+}
+.ba-before,.ba-after{
+  position:absolute;inset:0;padding:1rem;font-size:13px;line-height:1.8;color:#bbb;
+  overflow:hidden;white-space:pre-wrap;font-family:'DM Sans',sans-serif
+}
+.ba-after{
+  width:100%;clip-path:inset(0 50% 0 0); /* clipped by JS */
+  background:#1e1e1e;
+}
+.ba-before{background:#161616}
+.ba-divider{
+  position:absolute;top:0;bottom:0;width:2px;background:#9fca6e;
+  left:50%;transform:translateX(-50%);pointer-events:none;z-index:10
+}
+.ba-handle{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:36px;height:36px;border-radius:50%;background:#9fca6e;
+  display:flex;align-items:center;justify-content:center;z-index:11;pointer-events:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.5)
+}
+.ba-handle svg{width:16px;height:16px;fill:#1a1a1a}
+.ba-label-before,.ba-label-after{
+  position:absolute;bottom:8px;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;padding:2px 8px;border-radius:4px;pointer-events:none;z-index:12
+}
+.ba-label-before{left:8px;background:rgba(180,60,60,.4);color:#f09595}
+.ba-label-after{right:8px;background:rgba(99,153,34,.4);color:#9fca6e}
+
+/* Highlight marks in text */
+.ba-before .bad{background:rgba(180,60,60,.35);color:#f09595;border-radius:2px;padding:0 1px}
+.ba-after .good{background:rgba(99,153,34,.3);color:#9fca6e;border-radius:2px;padding:0 1px}
+
+.hint{margin-top:.75rem;font-size:11px;color:#555;text-align:center;letter-spacing:.04em}
+
+/* ── LOGIN SECTION ── */
+.login-section{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:55vh}
+.login-card{padding:3.5rem 3rem;border-right:1px solid var(--border)}
+.login-card:last-child{border-right:none}
+.login-card h2{font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;margin-bottom:.4rem}
+.login-card p{color:var(--text-muted);margin-bottom:2rem;font-size:13px}
+.field{margin-bottom:.9rem;max-width:360px}
+.field label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem}
+.field input{width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)}
+.field input:focus{outline:none;border-color:var(--accent-mid)}
+.btn{padding:.65rem 1.4rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#234a1e}
+.error{color:#a32d2d;font-size:13px;padding:.5rem 0}
+
+@media(max-width:700px){
+  .login-section{grid-template-columns:1fr}
+  .login-card{border-right:none;border-bottom:1px solid var(--border);padding:2.5rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>StemScribe — <em>structured edits,</em> real impact</h1>
+  <p>Turn peer feedback into measurable improvement. AI-guided collaboration for STEM writing.</p>
+
+  <!-- ─── BEFORE / AFTER SLIDER ─── -->
+  <div class="slider-container">
+    <div class="slider-labels">
+      <span id="lbl-before" class="active">Before</span>
+      <span id="lbl-after">After AI review</span>
+    </div>
+
+    <div class="ba-slider" id="baSlider">
+      <!-- BEFORE layer -->
+      <div class="ba-before" id="baBefore"><span class="bad">breaks down starch into sugars by providing activation energy to the reaction</span>. As <span class="bad">tempsrature</span> increases, enzyme activity increases <span class="bad">because particles move faster</span>. This experiment investigates <span class="bad">how heat affects enzymes</span>.
+
+Discussion
+The results indicate that temperature increases enzyme activity <span class="bad">by giving energy to the enzyme</span>. Activity peaked at 50°C and decreased at 80°C, <span class="bad">possibly due to minor experimental error</span>. Only one trial per temperature was performed, so the results <span class="bad">might be flawed</span>. Overall, the experiment <span class="bad">clearly shows that increasing temperature always increases amylase activity</span>.</div>
+
+      <!-- AFTER layer (clipped) -->
+      <div class="ba-after" id="baAfter"><span class="good">lowers the activation energy required for the breakdown of starch</span>. As temperature increases, enzyme activity generally increases <span class="good">because molecular collisions occur more frequently</span>. This experiment investigates <span class="good">the effect of temperature on amylase activity</span>.
+
+Discussion
+The results indicate that temperature affects enzyme activity <span class="good">by increasing molecular collisions at moderate temperatures</span>. Activity peaked at 50°C and decreased at 80°C, <span class="good">consistent with the expected denaturation of amylase at high temperatures</span>. Only one trial per temperature was performed, <span class="good">which may limit the reliability of the results</span>. Overall, the experiment <span class="good">suggests that amylase activity is influenced by temperature, with an optimal range below 80°C</span>.</div>
+
+      <!-- Divider + Handle -->
+      <div class="ba-divider" id="baDivider"></div>
+      <div class="ba-handle" id="baHandle">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 5l-5 7 5 7M16 5l5 7-5 7" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="ba-label-before">Before</div>
+      <div class="ba-label-after">After</div>
+    </div>
+
+    <div class="hint">← Drag the handle to compare before and after →</div>
+  </div>
+</div>
+
+<!-- ─── LOGIN ─── -->
+<div class="login-section">
+  <div class="login-card">
+    <h2>Student login</h2>
+    <p>Submit your STEM reports and receive structured AI feedback to improve your scientific writing.</p>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <form method="post" action="/login/">
+      {% csrf_token %}
+      <input type="hidden" name="role" value="student">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" name="username" placeholder="you@school.ac.uk" value="student@imperial.ac.uk" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" value="demo1234" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Log in as Student</button>
+    </form>
+  </div>
+
+  <div class="login-card">
+    <h2>Teacher login</h2>
+    <p>Access your class dashboard, view student progress, manage peer reviews and edit rubrics.</p>
+    <form method="post" action="/login/">
+      {% csrf_token %}
+      <input type="hidden" name="role" value="teacher">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" name="username" placeholder="teacher@school.ac.uk" value="teacher@imperial.ac.uk" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" value="demo1234" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Log in as Teacher</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// ── BEFORE/AFTER DRAG SLIDER ──────────────────────────────
+(function(){
+  const slider = document.getElementById('baSlider');
+  const after  = document.getElementById('baAfter');
+  const divider= document.getElementById('baDivider');
+  const handle = document.getElementById('baHandle');
+  const lblB   = document.getElementById('lbl-before');
+  const lblA   = document.getElementById('lbl-after');
+
+  let pct = 50; // 0–100, percentage from left
+  let dragging = false;
+
+  function setPos(x){
+    const rect = slider.getBoundingClientRect();
+    pct = Math.max(2, Math.min(98, ((x - rect.left) / rect.width) * 100));
+    render();
+  }
+
+  function render(){
+    // clip the "after" layer: show left portion up to pct
+    after.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    divider.style.left = pct + '%';
+    handle.style.left  = pct + '%';
+    // Update labels
+    lblB.classList.toggle('active', pct < 50);
+    lblA.classList.toggle('active', pct >= 50);
+  }
+
+  // Mouse
+  slider.addEventListener('mousedown', e => { dragging=true; setPos(e.clientX); e.preventDefault(); });
+  document.addEventListener('mousemove', e => { if(dragging) setPos(e.clientX); });
+  document.addEventListener('mouseup',   () => { dragging=false; });
+
+  // Touch
+  slider.addEventListener('touchstart', e => { dragging=true; setPos(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+  document.addEventListener('touchmove', e => { if(dragging) setPos(e.touches[0].clientX); }, {passive:false});
+  document.addEventListener('touchend',  () => { dragging=false; });
+
+  // Animate on load: sweep from right to centre
+  let initPct = 5;
+  const anim = setInterval(()=>{
+    initPct += 3;
+    pct = initPct;
+    render();
+    if(initPct >= 50) clearInterval(anim);
+  }, 18);
+})();
+</script>
+</body>
+</html>

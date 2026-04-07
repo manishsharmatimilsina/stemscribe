@@ -1,0 +1,32 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Class Feedback — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Class Feedback</div>
+    <div class="page-subtitle">AI-generated class-wide feedback across all rubric areas</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" onclick="window.location='{% url 'teacher_dashboard' %}'">Class statistics</button>
+    <button class="tab active">Class feedback</button>
+  </div>
+
+  <div class="card">
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:1.25rem">The class is performing well on Communication but needs targeted support on Understanding. Analysis scores are improving following the peer review cycle. Recommend a class discussion on data interpretation and overclaiming in conclusions.</p>
+
+    <div class="pillar pillar-u" style="border-radius:8px;padding:1rem;margin-bottom:.75rem">
+      <div class="pillar-title">Understanding — Class needs support</div>
+      <p style="font-size:13px;color:var(--u-text);margin-top:.4rem">Multiple students are mischaracterising enzyme mechanisms. Consider a class session on activation energy vs. kinetic energy and the concept of enzyme specificity.</p>
+    </div>
+    <div class="pillar pillar-a" style="border-radius:8px;padding:1rem;margin-bottom:.75rem">
+      <div class="pillar-title">Analysis — Improving</div>
+      <p style="font-size:13px;color:var(--a-text);margin-top:.4rem">Overclaiming in conclusions is the most common issue. Students are drawing absolute conclusions from limited single-trial data. Encourage hedging language.</p>
+    </div>
+    <div class="pillar pillar-c" style="border-radius:8px;padding:1rem">
+      <div class="pillar-title">Communication — Strongest area</div>
+      <p style="font-size:13px;color:var(--c-text);margin-top:.4rem">Grammar and structure are generally good. Some students are using casual phrasing in discussion sections ("might be flawed", "clearly shows").</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

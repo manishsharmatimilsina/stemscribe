@@ -1,0 +1,82 @@
+{% extends "core/student_base.html" %}
+{% block title %}Version History — {{ doc.title }} — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Version History</div>
+    <div class="page-subtitle">{{ doc.title }} — {{ versions.count }} version{{ versions.count|pluralize }}</div>
+  </div>
+
+  <div class="version-layout">
+    <!-- Version list -->
+    <div class="v-list">
+      <a href="{% url 'student_analysis' doc.pk %}" style="font-size:13px;font-weight:500;color:var(--accent);text-decoration:none;display:block;padding-bottom:.65rem;margin-bottom:.65rem;border-bottom:1px solid var(--border)">
+        Open current version →
+      </a>
+      {% for v in versions %}
+      <a href="{% url 'student_version' doc.pk %}?v={{ v.pk }}"
+         class="v-item {% if selected.pk == v.pk %}active{% endif %}"
+         style="text-decoration:none;color:inherit;display:block">
+        <div class="v-date">{{ v.created_at|date:"j M Y, H:i" }}</div>
+        <div class="v-type">{{ v.get_version_type_display }}</div>
+        {% if forloop.first %}<span class="tag tag-green" style="margin-top:3px">Current</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Document content -->
+    <div class="v-doc" id="versionDoc">
+      {% if selected %}
+        {% for para in selected.content|linebreaksbr|split:"<br /><br />" %}
+        <p style="margin-bottom:.85rem">{{ para|safe }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Score panel -->
+    <div class="v-scores">
+      <div style="font-weight:600;font-size:14px;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)">AI Score</div>
+
+      {% if overall %}
+      <div class="pbar-outer" style="margin-bottom:.5rem">
+        <div class="pbar-inner" style="width:{{ overall }}%"></div>
+      </div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:1rem">Overall: {{ overall }}%</div>
+      {% endif %}
+
+      <div class="score-row">
+        <span class="score-label" style="font-weight:600;color:var(--u-text)">Understanding</span>
+        <span class="score-val ms ms-u">{% if u_score %}{{ u_score }}%{% else %}—{% endif %}</span>
+      </div>
+      {% for name, val in sub_scores.understanding %}
+      <div class="score-row" style="padding-left:.75rem">
+        <span class="score-label">{{ name }}</span>
+        <span class="score-val" style="font-size:12px">{% if val != '—' %}{{ val }}%{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+
+      <div class="score-row" style="margin-top:.5rem">
+        <span class="score-label" style="font-weight:600;color:var(--a-text)">Analysis</span>
+        <span class="score-val ms ms-a">{% if a_score %}{{ a_score }}%{% else %}—{% endif %}</span>
+      </div>
+      {% for name, val in sub_scores.analysis %}
+      <div class="score-row" style="padding-left:.75rem">
+        <span class="score-label">{{ name }}</span>
+        <span class="score-val" style="font-size:12px">{% if val != '—' %}{{ val }}%{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+
+      <div class="score-row" style="margin-top:.5rem">
+        <span class="score-label" style="font-weight:600;color:var(--c-text)">Communication</span>
+        <span class="score-val ms ms-c">{% if c_score %}{{ c_score }}%{% else %}—{% endif %}</span>
+      </div>
+      {% for name, val in sub_scores.communication %}
+      <div class="score-row" style="padding-left:.75rem">
+        <span class="score-label">{{ name }}</span>
+        <span class="score-val" style="font-size:12px">{% if val != '—' %}{{ val }}%{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

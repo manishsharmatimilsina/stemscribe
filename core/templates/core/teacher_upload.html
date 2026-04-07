@@ -1,0 +1,20 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Upload Documents — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Upload Documents</div>
+    <div class="page-subtitle">Bulk upload student reports or assignment briefs for AI analysis</div>
+  </div>
+  <div class="card">
+    <div class="upload-zone" onclick="document.getElementById('bulkFile').click()">
+      <span class="upload-icon">☁</span>
+      <div style="font-weight:500;margin-bottom:.25rem">Upload student documents</div>
+      <div style="font-size:13px;color:var(--text-muted)">PDF, DOCX, TXT · Multiple files supported</div>
+    </div>
+    <input type="file" id="bulkFile" style="display:none" multiple accept=".pdf,.docx,.txt">
+    <div class="divider">or assign to students</div>
+    <p style="font-size:14px;color:var(--text-muted)">Select students from the sidebar to assign documents to them for peer review.</p>
+  </div>
+</div>
+{% endblock %}

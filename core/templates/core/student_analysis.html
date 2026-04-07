@@ -1,0 +1,154 @@
+{% extends "core/student_base.html" %}
+{% load stem_tags %}
+{% block title %}Analysis — {{ doc.title }} — StemScribe{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+      <div>
+        <div class="page-title">{{ doc.title }}</div>
+        <div class="page-subtitle">AI analysis complete · Click any highlight to jump to its feedback card</div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <a href="{% url 'student_version' doc.pk %}" class="btn btn-secondary btn-sm">Version History</a>
+        <a href="{% url 'student_dashboard' doc.pk %}" class="btn btn-primary btn-sm">My Dashboard →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score pills -->
+  <div style="display:flex;gap:.55rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+    <span class="tag" style="font-size:13px;padding:.3rem .85rem;background:var(--u-bg);color:var(--u-text)">Understanding: {{ u_score }}%</span>
+    <span class="tag" style="font-size:13px;padding:.3rem .85rem;background:var(--a-bg);color:var(--a-text)">Analysis: {{ a_score }}%</span>
+    <span class="tag" style="font-size:13px;padding:.3rem .85rem;background:var(--c-bg);color:var(--c-text)">Communication: {{ c_score }}%</span>
+    <span class="tag tag-green" style="font-size:13px;padding:.3rem .85rem">Overall: {{ overall }}%</span>
+    <div class="pbar-outer" style="flex:1;min-width:120px;margin:0">
+      <div class="pbar-inner" style="width:{{ overall }}%"></div>
+    </div>
+  </div>
+
+  <div class="analysis-layout">
+
+    <!-- REPORT WITH HIGHLIGHTS -->
+    <div>
+      <div class="report-panel" id="reportPanel">
+        {{ version.content|highlight_report:issues_json|safe }}
+      </div>
+      <div style="margin-top:.75rem;display:flex;gap:.65rem">
+        <a href="{% url 'student_submit' %}" class="btn btn-secondary btn-sm">← Submit another</a>
+        <a href="{% url 'student_version' doc.pk %}" class="btn btn-secondary btn-sm">Version history</a>
+      </div>
+    </div>
+
+    <!-- FEEDBACK PANEL -->
+    <div class="feedback-panel" id="feedbackPanel">
+      <div class="section-title" style="margin-bottom:.5rem">
+        AI Feedback
+        <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">· {{ issues|length }} issue{{ issues|length|pluralize }}</span>
+      </div>
+
+      {% for issue in issues %}
+      <div class="fc-card" id="fc-{{ forloop.counter0 }}">
+        {% if issue.type == 'understanding' %}
+        <div class="fc-type fc-type-u">Understanding — {{ issue.category }}</div>
+        {% elif issue.type == 'analysis' %}
+        <div class="fc-type fc-type-a">Analysis — {{ issue.category }}</div>
+        {% else %}
+        <div class="fc-type fc-type-c">Communication — {{ issue.category }}</div>
+        {% endif %}
+
+        <div class="fc-quote">"{{ issue.quote }}"</div>
+        <div class="fc-issue">Issue: {{ issue.issue }}</div>
+
+        <div id="fc-body-{{ forloop.counter0 }}">
+          <div class="fc-suggestion">{{ issue.suggestion }}</div>
+          <div class="fc-actions">
+            <button class="btn btn-approve btn-sm"
+              onclick="handleEdit({{ forloop.counter0 }}, {{ version.pk }}, 'approve')">
+              ✓ Approve
+            </button>
+            <button class="btn btn-reject btn-sm"
+              onclick="handleEdit({{ forloop.counter0 }}, {{ version.pk }}, 'reject')">
+              ✗ Skip
+            </button>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="fc-card">
+        <div class="fc-type fc-type-ok">All clear!</div>
+        <p style="font-size:13px;margin-top:.35rem;color:var(--text-muted)">No significant issues found.</p>
+      </div>
+      {% endfor %}
+
+      {% if issues %}
+      <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="scrollToFeedback(0)">
+        Begin edits ✨
+      </button>
+      {% endif %}
+
+      <!-- Score Breakdown -->
+      <div class="fc-card" style="margin-top:.25rem">
+        <div class="section-title" style="margin-bottom:.7rem">Score Breakdown</div>
+        {% if scores %}
+        <div style="font-size:11px;font-weight:600;color:var(--u-text);text-transform:uppercase;letter-spacing:.06em;padding:.5rem 0 .25rem">Understanding</div>
+        {% for k,v in scores.understanding.items %}
+        <div class="score-row"><span class="score-label">{{ k|title }}</span><span class="score-val">{{ v }}%</span></div>
+        {% endfor %}
+        <div style="font-size:11px;font-weight:600;color:var(--a-text);text-transform:uppercase;letter-spacing:.06em;padding:.5rem 0 .25rem">Analysis</div>
+        {% for k,v in scores.analysis.items %}
+        <div class="score-row"><span class="score-label">{{ k|title }}</span><span class="score-val">{{ v }}%</span></div>
+        {% endfor %}
+        <div style="font-size:11px;font-weight:600;color:var(--c-text);text-transform:uppercase;letter-spacing:.06em;padding:.5rem 0 .25rem">Communication</div>
+        {% for k,v in scores.communication.items %}
+        <div class="score-row"><span class="score-label">{{ k|title }}</span><span class="score-val">{{ v }}%</span></div>
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const versionPk = {{ version.pk }};
+
+function scrollToFeedback(i){
+  const el = document.getElementById('fc-'+i);
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.style.outline = '2px solid var(--accent-mid)';
+  setTimeout(()=>{ el.style.outline=''; }, 1800);
+}
+
+function handleEdit(idx, vPk, action){
+  const bodyDiv = document.getElementById('fc-body-'+idx);
+  fetch('/approve-edit/', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+    body: JSON.stringify({version_id:vPk, issue_index:idx, action:action})
+  })
+  .then(r=>r.json())
+  .then(()=>{
+    if(action==='approve'){
+      bodyDiv.innerHTML='<div class="fc-approved">✓ Edit approved — new version saved</div>';
+      showToast('Edit approved ✓');
+    } else {
+      bodyDiv.innerHTML='<div class="fc-skipped">Skipped</div>';
+    }
+  })
+  .catch(()=>{
+    bodyDiv.innerHTML = action==='approve'
+      ? '<div class="fc-approved">✓ Approved</div>'
+      : '<div class="fc-skipped">Skipped</div>';
+  });
+}
+
+function getCookie(name){
+  const v=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
+  return v?v.pop():'';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Teacher Dashboard — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Teacher Dashboard</div>
+    <div class="page-subtitle">{{ class_name }} — Class overview</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('stats',this)">Class statistics</button>
+    <button class="tab" onclick="showTab('feedback',this)">Class feedback</button>
+  </div>
+
+  <!-- TAB: CLASS STATS -->
+  <div id="tab-stats">
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-num">{{ student_count }}</div>
+        <div class="stat-label">Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">{{ overall_avg }}%</div>
+        <div class="stat-label">Avg. overall score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">+22</div>
+        <div class="stat-label">Avg. improvement</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">Average class impact</div>
+        </div>
+        <div style="display:flex;gap:.65rem">
+          <div class="pillar pillar-u" style="flex:1;border-radius:8px;padding:.9rem">
+            <div class="pillar-title">Understanding</div>
+            <div class="pillar-score">{{ u_avg }}%</div>
+          </div>
+          <div class="pillar pillar-a" style="flex:1;border-radius:8px;padding:.9rem">
+            <div class="pillar-title">Analysis</div>
+            <div class="pillar-score">{{ a_avg }}%</div>
+          </div>
+          <div class="pillar pillar-c" style="flex:1;border-radius:8px;padding:.9rem">
+            <div class="pillar-title">Communication</div>
+            <div class="pillar-score">{{ c_avg }}%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:.9rem">Flags</div>
+        <div class="flag-item">
+          <div class="flag-dot flag-red"></div>
+          <div><div style="font-weight:500">Carlos Mendez</div><div style="font-size:12px;color:var(--text-muted)">Low participation — 0 peer edits</div></div>
+        </div>
+        <div class="flag-item">
+          <div class="flag-dot flag-amber"></div>
+          <div><div style="font-weight:500">Emma Rossi</div><div style="font-size:12px;color:var(--text-muted)">Struggles with Data interpretation</div></div>
+        </div>
+        <div class="flag-item">
+          <div class="flag-dot flag-amber"></div>
+          <div><div style="font-weight:500">James Liu</div><div style="font-size:12px;color:var(--text-muted)">Struggles with Scientific accuracy</div></div>
+        </div>
+
+        <div class="section-title" style="margin-top:1.25rem;margin-bottom:.75rem">Top collaborators</div>
+        <div class="flag-item">
+          <span style="font-size:1rem">🏆</span>
+          <div><div style="font-weight:500">Beth Chen</div><div style="font-size:12px;color:var(--text-muted)">Best collaborator · +42 pts</div></div>
+        </div>
+        <div class="flag-item">
+          <span style="font-size:1rem">🥈</span>
+          <div><div style="font-weight:500">Diya Patel</div><div style="font-size:12px;color:var(--text-muted)">+35 pts</div></div>
+        </div>
+        <a href="{% url 'teacher_stats' %}" class="btn btn-secondary btn-sm" style="margin-top:1rem">View full report →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CLASS FEEDBACK -->
+  <div id="tab-feedback" style="display:none">
+    <div class="card">
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:1.25rem">The class is performing well on Communication but needs targeted support on Understanding — particularly Scientific accuracy.</p>
+      <div class="pillar pillar-u" style="border-radius:8px;padding:1rem;margin-bottom:.75rem">
+        <div class="pillar-title">Understanding — Class needs support</div>
+        <p style="font-size:13px;color:var(--u-text);margin-top:.4rem">Multiple students are mischaracterising enzyme mechanisms. Consider a class session on activation energy vs. kinetic energy.</p>
+      </div>
+      <div class="pillar pillar-a" style="border-radius:8px;padding:1rem;margin-bottom:.75rem">
+        <div class="pillar-title">Analysis — Improving</div>
+        <p style="font-size:13px;color:var(--a-text);margin-top:.4rem">Overclaiming in conclusions is the most common issue. Students drawing absolute conclusions from limited single-trial data.</p>
+      </div>
+      <div class="pillar pillar-c" style="border-radius:8px;padding:1rem">
+        <div class="pillar-title">Communication — Strongest area</div>
+        <p style="font-size:13px;color:var(--c-text);margin-top:.4rem">Grammar and structure are generally good. Some students use casual phrasing in discussion sections.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(id, btn){
+  document.getElementById('tab-stats').style.display = id==='stats'?'block':'none';
+  document.getElementById('tab-feedback').style.display = id==='feedback'?'block':'none';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+{% endblock %}

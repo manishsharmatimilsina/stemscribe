@@ -1,0 +1,123 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Rubric Editor — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Rubric Editor</div>
+    <div class="page-subtitle">Customise the evaluation criteria for your class. Changes apply to all future AI analyses.</div>
+  </div>
+
+  <div class="card" style="padding:0;margin-bottom:1rem">
+    <!-- Understanding -->
+    <div class="pillar pillar-u" style="border-radius:10px 10px 0 0;border-left:none;border-right:none;border-top:none;padding:.75rem 1.2rem">
+      <div class="pillar-title">Understanding</div>
+    </div>
+    {% for c in understanding %}
+    <div class="rubric-item">
+      <div class="rubric-dot" style="background:var(--amber)"></div>
+      <div style="flex:1">
+        <div class="rubric-name">{{ c.name }}</div>
+        <div class="rubric-desc">{{ c.description }}</div>
+      </div>
+      <a class="icon-btn" href="#" onclick="openEdit({{ c.pk }},'{{ c.name|escapejs }}','{{ c.description|escapejs }}','{{ c.pillar }}');return false" title="Edit">✎</a>
+      <a class="icon-btn" href="{% url 'teacher_rubric_delete' c.pk %}" style="color:#a32d2d" onclick="return confirm('Delete this criterion?')" title="Delete">✕</a>
+    </div>
+    {% endfor %}
+
+    <!-- Analysis -->
+    <div class="pillar pillar-a" style="border-radius:0;border-left:none;border-right:none;padding:.75rem 1.2rem">
+      <div class="pillar-title">Analysis</div>
+    </div>
+    {% for c in analysis %}
+    <div class="rubric-item">
+      <div class="rubric-dot" style="background:var(--pink)"></div>
+      <div style="flex:1">
+        <div class="rubric-name">{{ c.name }}</div>
+        <div class="rubric-desc">{{ c.description }}</div>
+      </div>
+      <a class="icon-btn" href="#" onclick="openEdit({{ c.pk }},'{{ c.name|escapejs }}','{{ c.description|escapejs }}','{{ c.pillar }}');return false" title="Edit">✎</a>
+      <a class="icon-btn" href="{% url 'teacher_rubric_delete' c.pk %}" style="color:#a32d2d" onclick="return confirm('Delete this criterion?')" title="Delete">✕</a>
+    </div>
+    {% endfor %}
+
+    <!-- Communication -->
+    <div class="pillar pillar-c" style="border-radius:0;border-left:none;border-right:none;padding:.75rem 1.2rem">
+      <div class="pillar-title">Communication</div>
+    </div>
+    {% for c in communication %}
+    <div class="rubric-item" {% if forloop.last %}style="border-bottom:none"{% endif %}>
+      <div class="rubric-dot" style="background:#534AB7"></div>
+      <div style="flex:1">
+        <div class="rubric-name">{{ c.name }}</div>
+        <div class="rubric-desc">{{ c.description }}</div>
+      </div>
+      <a class="icon-btn" href="#" onclick="openEdit({{ c.pk }},'{{ c.name|escapejs }}','{{ c.description|escapejs }}','{{ c.pillar }}');return false" title="Edit">✎</a>
+      <a class="icon-btn" href="{% url 'teacher_rubric_delete' c.pk %}" style="color:#a32d2d" onclick="return confirm('Delete this criterion?')" title="Delete">✕</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="display:flex;gap:.65rem">
+    <button class="btn btn-primary" onclick="openAdd()">+ Add criterion</button>
+    <button class="btn btn-secondary" onclick="showToast('Rubric saved ✓')">Save rubric</button>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle">Edit criterion</h3>
+    <form method="post" action="{% url 'teacher_rubric_save' %}">
+      {% csrf_token %}
+      <input type="hidden" name="pk" id="modalPk">
+      <div class="field">
+        <label>Pillar</label>
+        <select name="pillar" id="modalPillar">
+          <option value="understanding">Understanding</option>
+          <option value="analysis">Analysis</option>
+          <option value="communication">Communication</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Criterion name</label>
+        <input type="text" name="name" id="modalName" required>
+      </div>
+      <div class="field">
+        <label>Description / guiding question</label>
+        <input type="text" name="description" id="modalDesc">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openEdit(pk, name, desc, pillar){
+  document.getElementById('modalTitle').textContent = 'Edit criterion';
+  document.getElementById('modalPk').value = pk;
+  document.getElementById('modalName').value = name;
+  document.getElementById('modalDesc').value = desc;
+  document.getElementById('modalPillar').value = pillar;
+  document.getElementById('modal').classList.add('open');
+}
+function openAdd(){
+  document.getElementById('modalTitle').textContent = 'Add criterion';
+  document.getElementById('modalPk').value = '';
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalDesc').value = '';
+  document.getElementById('modalPillar').value = 'understanding';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+}
+document.getElementById('modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('modal')) closeModal();
+});
+</script>
+{% endblock %}

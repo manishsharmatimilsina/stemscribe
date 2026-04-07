@@ -1,0 +1,87 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}{{ student.get_full_name|default:student.username }} — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:1rem">
+      <div class="sb-avatar" style="width:44px;height:44px;font-size:14px;flex-shrink:0">
+        {{ student.first_name|first|upper }}{{ student.last_name|first|upper|default:student.username|first|upper }}
+      </div>
+      <div>
+        <div class="page-title">{{ student.get_full_name|default:student.username }}</div>
+        <div class="page-subtitle">BIOL 201 — {{ docs.count }} document{{ docs.count|pluralize }} · Overall: {{ overall }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:1.25rem">
+    <!-- Current work -->
+    <div class="card">
+      <div class="section-title" style="margin-bottom:.9rem">Open student's current work</div>
+      {% for doc in docs %}
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.5rem">
+        <span>📄</span>
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:14px">{{ doc.title }}</div>
+          <div style="font-size:12px;color:var(--text-muted)">{{ doc.version_count }} version{{ doc.version_count|pluralize }} · {{ doc.updated_at|date:"j M Y" }}</div>
+        </div>
+        <a href="{% url 'student_analysis' doc.pk %}" class="btn btn-secondary btn-sm">Open</a>
+      </div>
+      {% empty %}
+      <p style="font-size:13px;color:var(--text-muted)">No documents submitted yet.</p>
+      {% endfor %}
+
+      <div class="section-title" style="margin-top:1.4rem;margin-bottom:.75rem">Past projects</div>
+      {% for doc in docs %}
+      <div style="display:flex;align-items:center;gap:.5rem;font-size:13px;padding:.4rem 0;border-bottom:1px solid var(--border)">
+        <span>📄</span> {{ doc.title }}
+        <span class="tag tag-green" style="margin-left:auto">{{ overall }}%</span>
+      </div>
+      {% endfor %}
+
+      <div style="display:flex;gap:.5rem;margin-top:1rem">
+        <button class="btn btn-secondary btn-sm">Give student feedback</button>
+        <button class="btn btn-primary btn-sm">Mark work</button>
+      </div>
+    </div>
+
+    <!-- Peer feedback outputs -->
+    <div class="card">
+      <div class="section-title" style="margin-bottom:.9rem">Peer feedback outputs</div>
+      {% for pe in peer_edits %}
+      <div style="font-size:13px;padding:.6rem;background:var(--bg);border-radius:8px;border:1px solid var(--border);margin-bottom:.5rem">
+        <div style="font-weight:500;margin-bottom:.15rem">Feedback given (anonymous)</div>
+        <div style="font-size:12px;color:var(--text-muted)">{{ pe.created_at|date:"j M Y" }} · Understanding +{{ pe.score_impact_understanding }}, Analysis +{{ pe.score_impact_analysis }}, Comm. +{{ pe.score_impact_communication }}</div>
+      </div>
+      {% empty %}
+      <p style="font-size:13px;color:var(--text-muted)">No peer edits submitted yet.</p>
+      {% endfor %}
+
+      <!-- Score summary -->
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div class="section-title" style="margin-bottom:.75rem">Score progression</div>
+        <div style="display:flex;gap:.6rem">
+          <div class="pillar pillar-u" style="flex:1;padding:.75rem;border-radius:8px">
+            <div class="pillar-title" style="font-size:12px">Understanding</div>
+            <div class="pillar-score" style="font-size:1.3rem">{{ u_score|default:"—" }}{% if u_score %}%{% endif %}</div>
+          </div>
+          <div class="pillar pillar-a" style="flex:1;padding:.75rem;border-radius:8px">
+            <div class="pillar-title" style="font-size:12px">Analysis</div>
+            <div class="pillar-score" style="font-size:1.3rem">{{ a_score|default:"—" }}{% if a_score %}%{% endif %}</div>
+          </div>
+          <div class="pillar pillar-c" style="flex:1;padding:.75rem;border-radius:8px">
+            <div class="pillar-title" style="font-size:12px">Communication</div>
+            <div class="pillar-score" style="font-size:1.3rem">{{ c_score|default:"—" }}{% if c_score %}%{% endif %}</div>
+          </div>
+        </div>
+        {% if overall %}
+        <div class="pbar-outer" style="margin-top:.75rem">
+          <div class="pbar-inner" style="width:{{ overall }}%"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:.3rem">Overall: {{ overall }}%</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "core/base.html" %}
+{% block sidebar_sub %}Student Portal{% endblock %}
+{% block sidebar_role %}{{ user.profile.class_name|default:"BIOL 201" }}{% endblock %}
+
+{% block sidebar_nav %}
+<div class="sb-section">
+  <div class="sb-section-label">Navigation</div>
+  <a href="{% url 'student_submit' %}" class="sb-item {% if page == 'submit' %}active{% endif %}">
+    <span class="sb-icon">+</span> New document
+  </a>
+  <a href="{% url 'howto' %}" class="sb-item {% if page == 'howto' %}active{% endif %}">
+    <span class="sb-icon">?</span> How work is evaluated
+  </a>
+</div>
+
+<div class="sb-section">
+  <div class="sb-section-label">Your Classes</div>
+  <a href="#" class="sb-item">
+    <span class="sb-icon">◈</span> BIOL 201 — Biochemistry
+  </a>
+  <a href="#" class="sb-item">
+    <span class="sb-icon">◈</span> CHEM 304 — Org. Chemistry
+  </a>
+</div>
+
+<div class="sb-section">
+  <div class="sb-section-label">Your Work</div>
+  {% for doc in documents %}
+  <div class="sb-item {% if page in 'analysis,version,dashboard' and doc.pk == doc.pk %}active{% endif %}"
+       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">
+    <span class="sb-icon">📄</span>
+    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">{{ doc.title }}</span>
+    <span class="sb-badge">{{ doc.version_count }}</span>
+  </div>
+  <div class="sb-sub-group" style="display:{% if page in 'analysis,version,dashboard' %}block{% else %}none{% endif %}">
+    <a href="{% url 'student_analysis' doc.pk %}" class="sb-sub-item {% if page == 'analysis' %}active{% endif %}">Open</a>
+    <a href="{% url 'student_version' doc.pk %}" class="sb-sub-item {% if page == 'version' %}active{% endif %}">Version History</a>
+    <a href="{% url 'student_dashboard' doc.pk %}" class="sb-sub-item {% if page == 'dashboard' %}active{% endif %}">Dashboard</a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="sb-section">
+  <div class="sb-section-label">Peer Edits ({{ peer_edit_count }})</div>
+  <div class="sb-item"><span class="sb-icon">👤</span> Student A (anonymous)</div>
+  <div class="sb-item"><span class="sb-icon">👤</span> Student B (anonymous)</div>
+  <div class="sb-item"><span class="sb-icon">👤</span> Student C (anonymous)</div>
+</div>
+{% endblock %}

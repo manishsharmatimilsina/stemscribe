@@ -1,0 +1,84 @@
+{% extends "core/student_base.html" %}
+{% block title %}Submit Report — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Submit a report</div>
+    <div class="page-subtitle">Keep your report as complete as possible (Introduction, Methods, Results, Discussion).</div>
+  </div>
+
+  <!-- Submit form -->
+  <div id="submitForm">
+    <div class="card" style="margin-bottom:1.25rem">
+      <form method="post" action="{% url 'student_analyse' %}" enctype="multipart/form-data" id="analyseForm">
+        {% csrf_token %}
+        <div class="field">
+          <label>Report title</label>
+          <input type="text" name="title" placeholder="e.g. Enzyme Activity Lab" value="{{ prefill_title|default:'' }}">
+        </div>
+
+        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+          <span class="upload-icon">☁</span>
+          <div style="font-weight:500;margin-bottom:.25rem">Upload document</div>
+          <div style="font-size:13px;color:var(--text-muted)">PDF, DOCX, or TXT · drag and drop or click</div>
+        </div>
+        <input type="file" id="fileInput" name="report_file" style="display:none" accept=".txt,.pdf,.docx" onchange="handleFile(this)">
+
+        <div class="divider">or paste your report here</div>
+
+        <textarea class="report-input" name="report_text" id="reportText"
+          placeholder="Introduction&#10;Amylase is an enzyme that...&#10;&#10;Method&#10;We mixed starch solution with...&#10;&#10;Results&#10;As temperature increased...&#10;&#10;Discussion&#10;The results indicate...">{{ prefill_text|default:'' }}</textarea>
+
+        <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem">
+          <button type="submit" class="btn btn-primary" id="analyseBtn" onclick="startLoading()">
+            Analyse ✨
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading overlay (shown while form submits + server processes) -->
+  <div class="loading-wrap" id="loadingWrap">
+    <div style="font-size:1.15rem;font-weight:500;margin-bottom:.5rem">AI analysis in progress…</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:.25rem" id="loadingStatus">Evaluating Understanding, Analysis, and Communication</div>
+    <div class="loading-bar-outer" style="max-width:480px;margin:1rem auto">
+      <div class="loading-bar-inner" id="loadingBar"></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted)" id="loadingNote">This page will redirect automatically when complete</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function handleFile(input){
+  if(!input.files||!input.files[0]) return;
+  const f=input.files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    if(f.name.endsWith('.txt')) document.getElementById('reportText').value=e.target.result;
+    else showToast('File attached: '+f.name+'. Non-text files will be sent for server-side extraction.');
+  };
+  reader.readAsText(f);
+}
+
+const msgs=['Checking scientific accuracy…','Evaluating conceptual depth…','Analysing data interpretation…','Reviewing critical evaluation…','Assessing communication and tone…','Generating structured feedback…'];
+let mi=0,pct=0,timer;
+
+function startLoading(){
+  const txt=document.getElementById('reportText').value.trim();
+  const file=document.getElementById('fileInput').files[0];
+  if(!txt&&!file){event.preventDefault();showToast('Please paste or upload a report first.');return;}
+  document.getElementById('submitForm').style.display='none';
+  document.getElementById('loadingWrap').classList.add('active');
+
+  // Animate bar
+  timer=setInterval(()=>{
+    pct=Math.min(92,pct+(Math.random()*3+1));
+    document.getElementById('loadingBar').style.width=pct+'%';
+    document.getElementById('loadingStatus').textContent=msgs[mi++ % msgs.length];
+  },1100);
+}
+</script>
+{% endblock %}
