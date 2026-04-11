@@ -1,6 +1,9 @@
 import json
+import logging
 import urllib.request
 import urllib.error
+
+logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -138,7 +141,11 @@ def call_claude(prompt):
             text = data['choices'][0]['message']['content']
             text = text.replace('```json', '').replace('```', '').strip()
             return json.loads(text)
-    except Exception:
+    except urllib.error.HTTPError as e:
+        logger.error("OpenAI API HTTP error %s: %s", e.code, e.read())
+        return None
+    except Exception as e:
+        logger.error("OpenAI API call failed: %s", e)
         return None
 
 def ensure_demo_doc(user):
