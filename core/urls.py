@@ -34,6 +34,12 @@ urlpatterns = [
     path('peer/share/<int:doc_id>/', views.share_section, name='share_section'),
     path('peer/close/<int:share_id>/', views.close_share, name='close_share'),
     path('peer/activity/', views.my_peer_activity, name='peer_activity'),
+    path('peer/delete/<int:feedback_id>/', views.delete_peer_feedback, name='delete_peer_feedback'),
+
+    # Teacher comments
+    path('teacher/comment/<int:doc_id>/', views.add_teacher_comment, name='add_teacher_comment'),
+    path('teacher/comment/delete/<int:comment_id>/', views.delete_teacher_comment, name='delete_teacher_comment'),
+    path('teacher/peer-overview/', views.teacher_peer_overview, name='teacher_peer_overview'),
 
     # API
     path('api/analyse/', views.api_analyse, name='api_analyse'),

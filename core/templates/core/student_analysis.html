@@ -88,6 +88,80 @@
       </button>
       {% endif %}
 
+      <!-- Peer Feedback -->
+      {% if peer_feedbacks %}
+      <div style="margin-top:1rem">
+        <div class="section-title" style="margin-bottom:.5rem">
+          Peer Feedback
+          <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">· {{ peer_feedbacks.count }} comment{{ peer_feedbacks.count|pluralize }}</span>
+        </div>
+        {% for fb in peer_feedbacks %}
+        <div class="fc-card" style="border-left:3px solid var(--accent-mid)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+            <div class="fc-type" style="background:#eaf3de;color:#3a6b1a;margin-bottom:0">
+              Peer — {{ fb.share_request.get_section_label_display }}
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              {% if fb.scored %}
+              <span style="font-size:11px;color:var(--accent-mid);font-weight:600">Score: {{ fb.ai_contribution_score }}/100</span>
+              {% endif %}
+              <form method="post" action="{% url 'delete_peer_feedback' fb.pk %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'student_analysis' doc.pk %}">
+                <button type="submit" onclick="return confirm('Delete this feedback?')"
+                  style="background:none;border:none;cursor:pointer;font-size:13px;color:#999;padding:0 2px" title="Delete">✕</button>
+              </form>
+            </div>
+          </div>
+          {% if fb.share_request.question %}
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:.35rem;font-style:italic">Q: {{ fb.share_request.question }}</div>
+          {% endif %}
+          <div style="font-size:13px;line-height:1.6;color:var(--text)">{{ fb.feedback_text }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:.4rem">{{ fb.created_at|date:"j M Y, H:i" }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Teacher Comments -->
+      {% if teacher_comments %}
+      <div style="margin-top:1rem">
+        <div class="section-title" style="margin-bottom:.5rem">Teacher Feedback</div>
+        {% for comment in teacher_comments %}
+        <div class="fc-card" style="border-left:3px solid #5b8dd9">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+            <div class="fc-type" style="background:#e8eef8;color:#2d5599;margin-bottom:0">
+              {{ comment.teacher.get_full_name|default:comment.teacher.username }}
+            </div>
+            {% if is_teacher and comment.teacher == request.user %}
+            <form method="post" action="{% url 'delete_teacher_comment' comment.pk %}" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'student_analysis' doc.pk %}">
+              <button type="submit" onclick="return confirm('Delete this comment?')"
+                style="background:none;border:none;cursor:pointer;font-size:13px;color:#999;padding:0 2px" title="Delete">✕</button>
+            </form>
+            {% endif %}
+          </div>
+          <div style="font-size:13px;line-height:1.6;color:var(--text)">{{ comment.text }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:.4rem">{{ comment.created_at|date:"j M Y, H:i" }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Teacher: add comment form -->
+      {% if is_teacher %}
+      <div style="margin-top:1rem">
+        <div class="section-title" style="margin-bottom:.5rem">Add Teacher Feedback</div>
+        <form method="post" action="{% url 'add_teacher_comment' doc.pk %}">
+          {% csrf_token %}
+          <textarea name="text" rows="3" placeholder="Leave feedback for this student..."
+            style="width:100%;padding:.65rem .9rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.5;margin-bottom:.5rem"></textarea>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Post feedback</button>
+        </form>
+      </div>
+      {% endif %}
+
       <!-- Score Breakdown -->
       <div class="fc-card" style="margin-top:.25rem">
         <div class="section-title" style="margin-bottom:.7rem">Score Breakdown</div>

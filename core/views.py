@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit, PeerShareRequest, PeerFeedback
+from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit, PeerShareRequest, PeerFeedback, TeacherComment
 
 # ──────────────────────────────────────────
 # DEMO DATA
@@ -426,6 +426,14 @@ def student_analysis(request, doc_id):
 
     approved_indices = request.session.get(f'approved_{version.pk}', []) if version else []
 
+    # Peer feedback received on any share from this document
+    peer_feedbacks = PeerFeedback.objects.filter(
+        share_request__document=doc
+    ).order_by('created_at')
+
+    # Teacher comments on this document
+    teacher_comments = TeacherComment.objects.filter(document=doc).order_by('created_at')
+
     ctx = _student_context(request)
     ctx.update({
         'page': 'analysis',
@@ -439,6 +447,9 @@ def student_analysis(request, doc_id):
         'a_score': pillar_avg(scores, 'analysis'),
         'c_score': pillar_avg(scores, 'communication'),
         'overall': overall_avg(scores),
+        'peer_feedbacks': peer_feedbacks,
+        'teacher_comments': teacher_comments,
+        'is_teacher': get_role(request.user) == 'teacher',
     })
     return render(request, 'core/student_analysis.html', ctx)
 
@@ -720,6 +731,67 @@ def close_share(request, share_id):
     share.is_open = False
     share.save()
     return redirect('peer_feed')
+
+
+@login_required
+def delete_peer_feedback(request, feedback_id):
+    fb = get_object_or_404(PeerFeedback, pk=feedback_id)
+    doc = fb.share_request.document
+    # Allow: the reviewer themselves, the doc owner, or a teacher
+    if fb.reviewer == request.user or doc.owner == request.user or get_role(request.user) == 'teacher':
+        fb.delete()
+    return redirect(request.POST.get('next', 'peer_feed'))
+
+
+@login_required
+@require_POST
+def add_teacher_comment(request, doc_id):
+    if get_role(request.user) != 'teacher':
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+    doc = get_object_or_404(Document, pk=doc_id)
+    text = request.POST.get('text', '').strip()
+    if text:
+        TeacherComment.objects.create(teacher=request.user, document=doc, text=text)
+    return redirect('student_analysis', doc_id=doc_id)
+
+
+@login_required
+def delete_teacher_comment(request, comment_id):
+    comment = get_object_or_404(TeacherComment, pk=comment_id)
+    if comment.teacher == request.user or get_role(request.user) == 'teacher':
+        comment.delete()
+    return redirect(request.POST.get('next', 'teacher_dashboard'))
+
+
+@login_required
+def teacher_peer_overview(request):
+    if get_role(request.user) != 'teacher':
+        return redirect('landing')
+    all_shares = PeerShareRequest.objects.order_by('-created_at')
+    all_feedbacks = PeerFeedback.objects.order_by('-created_at')
+
+    # Contribution scores per student
+    students = User.objects.filter(profile__role='student')
+    student_stats = []
+    for s in students:
+        given = PeerFeedback.objects.filter(reviewer=s)
+        avg = round(sum(f.ai_contribution_score for f in given) / given.count()) if given.exists() else 0
+        student_stats.append({
+            'user': s,
+            'given_count': given.count(),
+            'avg_score': avg,
+            'shares_count': PeerShareRequest.objects.filter(created_by=s).count(),
+        })
+    student_stats.sort(key=lambda x: x['avg_score'], reverse=True)
+
+    ctx = _teacher_context(request)
+    ctx.update({
+        'page': 'peer_overview',
+        'all_shares': all_shares,
+        'all_feedbacks': all_feedbacks,
+        'student_stats': student_stats,
+    })
+    return render(request, 'core/teacher_peer_overview.html', ctx)
 
 
 @login_required

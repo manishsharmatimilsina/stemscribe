@@ -1,0 +1,111 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Peer Review Overview — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Peer Review Overview</div>
+      <div class="page-sub">Student engagement, contribution scores, and all peer activity</div>
+    </div>
+  </div>
+
+  <!-- Student contribution leaderboard -->
+  <div style="margin-bottom:2rem">
+    <div class="section-title" style="margin-bottom:.75rem">Student Contribution Scores</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#f9f8f6;border-bottom:1px solid var(--border)">
+            <th style="padding:.65rem 1rem;text-align:left;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em">Student</th>
+            <th style="padding:.65rem 1rem;text-align:center;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em">Reviews given</th>
+            <th style="padding:.65rem 1rem;text-align:center;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em">Sections shared</th>
+            <th style="padding:.65rem 1rem;text-align:center;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em">Avg contribution</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in student_stats %}
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:.65rem 1rem">
+              <a href="{% url 'teacher_student' s.user.pk %}" style="color:var(--text);font-weight:500;text-decoration:none">
+                {{ s.user.get_full_name|default:s.user.username }}
+              </a>
+            </td>
+            <td style="padding:.65rem 1rem;text-align:center">{{ s.given_count }}</td>
+            <td style="padding:.65rem 1rem;text-align:center">{{ s.shares_count }}</td>
+            <td style="padding:.65rem 1rem;text-align:center">
+              {% if s.given_count %}
+              <span style="font-weight:700;color:{% if s.avg_score >= 70 %}var(--accent){% elif s.avg_score >= 40 %}var(--accent-mid){% else %}#c0392b{% endif %}">
+                {{ s.avg_score }}/100
+              </span>
+              {% else %}
+              <span style="color:var(--text-muted)">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="padding:1.5rem;text-align:center;color:var(--text-muted)">No students yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+    <!-- All share requests -->
+    <div>
+      <div class="section-title" style="margin-bottom:.75rem">All Peer Share Requests ({{ all_shares.count }})</div>
+      {% for req in all_shares %}
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:.6rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+          <span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px">
+            {{ req.get_section_label_display }}
+          </span>
+          <span style="font-size:11px;color:{% if req.is_open %}var(--accent){% else %}var(--text-muted){% endif %}">
+            {% if req.is_open %}Open{% else %}Closed{% endif %}
+          </span>
+        </div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:.2rem">{{ req.created_by.get_full_name|default:req.created_by.username }}</div>
+        {% if req.question %}
+        <div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:.3rem">{{ req.question }}</div>
+        {% endif %}
+        <div style="font-size:12px;color:var(--text-muted)">{{ req.feedback_count }} review{{ req.feedback_count|pluralize }} · {{ req.created_at|date:"j M Y" }}</div>
+        <a href="{% url 'peer_review' req.pk %}" style="font-size:11px;color:var(--accent-mid);text-decoration:underline">View →</a>
+      </div>
+      {% empty %}
+      <div style="font-size:13px;color:var(--text-muted)">No share requests yet.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Recent peer feedbacks -->
+    <div>
+      <div class="section-title" style="margin-bottom:.75rem">Recent Peer Feedback ({{ all_feedbacks.count }})</div>
+      {% for fb in all_feedbacks %}
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:.6rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+          <span style="font-size:13px;font-weight:500">{{ fb.reviewer.get_full_name|default:fb.reviewer.username }}</span>
+          <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M" }}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:.35rem">on {{ fb.share_request.created_by.get_full_name|default:fb.share_request.created_by.username }}'s {{ fb.share_request.get_section_label_display }}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5">{{ fb.feedback_text|truncatewords:25 }}</div>
+        {% if fb.scored %}
+        <div style="margin-top:.4rem;font-size:11px;color:var(--accent-mid);font-weight:600">AI score: {{ fb.ai_contribution_score }}/100</div>
+        {% endif %}
+        <div style="display:flex;gap:.75rem;margin-top:.4rem">
+          <a href="{% url 'peer_review' fb.share_request.pk %}" style="font-size:11px;color:var(--accent-mid);text-decoration:underline">View thread →</a>
+          <form method="post" action="{% url 'delete_peer_feedback' fb.pk %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'teacher_peer_overview' %}">
+            <button type="submit" onclick="return confirm('Delete this feedback?')"
+              style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0392b;text-decoration:underline;padding:0">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div style="font-size:13px;color:var(--text-muted)">No peer feedback submitted yet.</div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
