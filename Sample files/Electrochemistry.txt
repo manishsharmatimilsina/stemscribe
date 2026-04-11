@@ -1,0 +1,31 @@
+Introduction
+
+Electrochemical processes have attracted increasing attention as efficient and environmentally friendly methods for water and wastewater treatment. Unlike conventional chemical treatment methods, electrochemical techniques can generate reactive species in situ, reduce chemical consumption, and provide better process control. These advantages make electrochemical treatment promising for the removal of organic pollutants, color, and toxic compounds from industrial effluents.
+
+Among different electrochemical approaches, anodic oxidation is widely studied because of its ability to degrade persistent contaminants through direct electron transfer at the electrode surface and indirect oxidation by reactive oxygen species. The performance of the process depends strongly on operating parameters such as current density, treatment time, solution pH, electrode material, and initial pollutant concentration.
+
+Despite significant progress, optimization of electrochemical treatment remains necessary to improve energy efficiency and pollutant removal performance. Therefore, this study investigates the electrochemical degradation of a model organic pollutant in aqueous solution, with emphasis on the effects of current density and electrolysis time on removal efficiency and energy consumption.
+
+Methods
+
+The electrochemical experiments were carried out in a batch reactor equipped with two electrodes connected to a DC power supply. A synthetic aqueous solution containing the target pollutant was prepared at a known initial concentration. Sodium sulfate was added as supporting electrolyte to improve solution conductivity.
+
+The electrochemical cell was operated at room temperature under constant stirring to ensure uniform mass transport. Different current densities were applied in order to evaluate their influence on the degradation process. Samples were collected at regular time intervals during electrolysis and analyzed using UV–Vis spectroscopy to determine the remaining pollutant concentration.
+
+The pollutant removal efficiency was calculated from the change in concentration before and after treatment. Energy consumption was estimated based on the applied voltage, current, and electrolysis time. All experiments were repeated at least three times, and the average values were reported.
+
+Results and Discussion
+
+The results showed that pollutant removal increased with electrolysis time for all operating conditions. At low current density, the degradation rate was relatively slow, indicating limited generation of oxidizing species. In contrast, higher current density significantly improved removal efficiency, particularly during the initial stage of treatment.
+
+This improvement can be attributed to the enhanced formation of hydroxyl radicals and other reactive oxidants at the anode surface. These species promote the oxidation of organic molecules into smaller intermediates and, eventually, mineralized products such as carbon dioxide and water. However, at excessively high current density, the gain in removal efficiency was not proportional to the increase in electrical input. This suggests that side reactions, including oxygen evolution, may compete with pollutant oxidation and reduce current efficiency.
+
+The effect of treatment time was also important. Longer electrolysis duration increased overall degradation, but the rate of removal gradually decreased with time. This behavior is likely related to the lower concentration of pollutant remaining in solution, which reduces the probability of interaction with reactive species. In addition, some intermediate products may be more resistant to oxidation than the parent compound.
+
+From an energy perspective, higher current density provided faster removal but also increased power consumption. Therefore, an optimal operating condition should balance treatment efficiency with energy cost. These findings indicate that electrochemical treatment can be effective, but process optimization is essential for practical application.
+
+Conclusion
+
+This study demonstrates that the electrochemical process is a promising method for pollutant removal from aqueous solution. Both current density and electrolysis time strongly influenced treatment performance. Higher current density improved degradation efficiency by increasing the generation of reactive oxidizing species, while longer treatment time enhanced total removal. However, excessive current density also increased energy consumption and may promote side reactions.
+
+Overall, the results suggest that electrochemical treatment offers an effective and controllable approach for water purification, but careful optimization of operating parameters is necessary to achieve high efficiency at reasonable energy cost. Future work should focus on electrode material selection, scale-up studies, and treatment of real wastewater samples.
