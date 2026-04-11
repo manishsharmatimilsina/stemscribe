@@ -11,6 +11,8 @@
         <div class="page-subtitle">AI analysis complete · Click any highlight to jump to its feedback card</div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button onclick="toggleEdit()" class="btn btn-secondary btn-sm" id="editToggleBtn">✎ Edit & revise</button>
+        <a href="{% url 'download_report' doc.pk %}" class="btn btn-secondary btn-sm">↓ Download</a>
         <a href="{% url 'student_version' doc.pk %}" class="btn btn-secondary btn-sm">Version History</a>
         <a href="{% url 'student_dashboard' doc.pk %}" class="btn btn-primary btn-sm">My Dashboard →</a>
       </div>
@@ -32,9 +34,25 @@
 
     <!-- REPORT WITH HIGHLIGHTS -->
     <div>
+      <!-- View mode -->
       <div class="report-panel" id="reportPanel">
         {{ version.content|highlight_report:issues_json|safe }}
       </div>
+
+      <!-- Edit mode (hidden by default) -->
+      <div id="editPanel" style="display:none">
+        <form method="post" action="{% url 'save_revision' doc.pk %}">
+          {% csrf_token %}
+          <textarea name="content" id="editTextarea"
+            style="width:100%;min-height:520px;padding:1.25rem;border:1px solid var(--accent-mid);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.85;resize:vertical;background:#fff;color:var(--text)">{{ version.content }}</textarea>
+          <div style="display:flex;gap:.65rem;margin-top:.65rem;align-items:center">
+            <button type="submit" class="btn btn-primary btn-sm">Save revision &amp; re-analyse ✨</button>
+            <button type="button" onclick="toggleEdit()" class="btn btn-secondary btn-sm">Cancel</button>
+            <span style="font-size:12px;color:var(--text-muted)">Saving will create a new version and re-run AI analysis.</span>
+          </div>
+        </form>
+      </div>
+
       <div style="margin-top:.75rem;display:flex;gap:.65rem">
         <a href="{% url 'student_submit' %}" class="btn btn-secondary btn-sm">← Submit another</a>
         <a href="{% url 'student_version' doc.pk %}" class="btn btn-secondary btn-sm">Version history</a>
@@ -223,6 +241,16 @@ function handleEdit(idx, vPk, action){
 function getCookie(name){
   const v=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
   return v?v.pop():'';
+}
+
+function toggleEdit(){
+  const view = document.getElementById('reportPanel');
+  const edit = document.getElementById('editPanel');
+  const btn  = document.getElementById('editToggleBtn');
+  const isEditing = edit.style.display !== 'none';
+  view.style.display = isEditing ? '' : 'none';
+  edit.style.display = isEditing ? 'none' : '';
+  btn.textContent   = isEditing ? '✎ Edit & revise' : '✕ Close editor';
 }
 </script>
 {% endblock %}

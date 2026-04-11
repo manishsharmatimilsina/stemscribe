@@ -2,6 +2,7 @@ import json
 import logging
 import urllib.request
 import urllib.error
+from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 from django.db import models
@@ -487,6 +488,38 @@ def approve_edit(request):
 
     request.session[key] = approved
     return JsonResponse({'ok': True, 'approved': approved})
+
+@login_required
+@require_POST
+def save_revision(request, doc_id):
+    doc = get_object_or_404(Document, pk=doc_id, owner=request.user)
+    content = request.POST.get('content', '').strip()
+    if content:
+        DocumentVersion.objects.create(
+            document=doc,
+            content=content,
+            version_type='self_edit',
+        )
+        doc.save()
+        request.session['pending_version_id'] = None
+        # Re-analyse the revised content
+        version = doc.versions.order_by('-created_at').first()
+        request.session['pending_version_id'] = version.pk
+        request.session['pending_doc_id'] = doc.pk
+        return redirect('api_analyse')
+    return redirect('student_analysis', doc_id=doc_id)
+
+
+@login_required
+def download_report(request, doc_id):
+    doc = get_object_or_404(Document, pk=doc_id, owner=request.user)
+    version = doc.versions.order_by('-created_at').first()
+    content = version.content if version else ''
+    response = HttpResponse(content, content_type='text/plain; charset=utf-8')
+    safe_title = doc.title.replace(' ', '_').replace('/', '-')
+    response['Content-Disposition'] = f'attachment; filename="{safe_title}_revised.txt"'
+    return response
+
 
 @login_required
 def student_version_history(request, doc_id):

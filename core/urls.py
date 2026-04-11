@@ -41,6 +41,10 @@ urlpatterns = [
     path('teacher/comment/delete/<int:comment_id>/', views.delete_teacher_comment, name='delete_teacher_comment'),
     path('teacher/peer-overview/', views.teacher_peer_overview, name='teacher_peer_overview'),
 
+    # Revision + download
+    path('student/revise/<int:doc_id>/', views.save_revision, name='save_revision'),
+    path('student/download/<int:doc_id>/', views.download_report, name='download_report'),
+
     # API
     path('api/analyse/', views.api_analyse, name='api_analyse'),
 ]

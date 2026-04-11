@@ -19,14 +19,6 @@ def highlight_report(content, issues_json):
     # Escape HTML first
     safe = html_module.escape(content)
 
-    # Section headers
-    for section in ['Introduction', 'Method', 'Methods', 'Results', 'Discussion', 'Conclusion']:
-        safe = re.sub(
-            rf'^{section}$',
-            f'<div class="report-section-title">{section}</div>',
-            safe, flags=re.MULTILINE
-        )
-
     # Highlight each quoted phrase
     for i, issue in enumerate(issues):
         quote = html_module.escape(issue.get('quote', ''))
@@ -41,5 +33,18 @@ def highlight_report(content, issues_json):
         )
         safe = safe.replace(quote, replacement, 1)
 
-    safe = safe.replace('\n\n', '<br><br>').replace('\n', ' ')
-    return safe
+    # Split into paragraphs, wrap each in <p>, detect section headers
+    paragraphs = safe.split('\n\n')
+    result = []
+    section_names = ['Introduction', 'Method', 'Methods', 'Results', 'Discussion', 'Conclusion', 'Abstract']
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+        clean = para.strip()
+        if clean in section_names:
+            result.append(f'<div class="report-section-title">{clean}</div>')
+        else:
+            para_html = para.replace('\n', '<br>')
+            result.append(f'<p style="margin-bottom:.75rem;line-height:1.85">{para_html}</p>')
+    return '\n'.join(result)
