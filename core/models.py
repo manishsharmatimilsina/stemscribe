@@ -123,6 +123,7 @@ class PeerShareRequest(models.Model):
     section_label = models.CharField(max_length=50, choices=SECTION_CHOICES, default='custom')
     section_text = models.TextField()
     question = models.TextField(blank=True)
+    shared_with = models.ManyToManyField(User, blank=True, related_name='received_shares')  # empty = all students
     is_open = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

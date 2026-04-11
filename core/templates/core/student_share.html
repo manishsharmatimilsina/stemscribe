@@ -44,6 +44,24 @@
             style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text)">
         </div>
 
+        <div style="margin-bottom:1.4rem">
+          <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.4rem">
+            Share with <span style="font-weight:400;text-transform:none">(leave all unchecked to share with everyone)</span>
+          </label>
+          {% if all_students %}
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+            {% for student in all_students %}
+            <label style="display:flex;align-items:center;gap:.4rem;padding:.4rem .85rem;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;background:#fff">
+              <input type="checkbox" name="shared_with" value="{{ student.pk }}" style="accent-color:var(--accent)">
+              {{ student.get_full_name|default:student.username }}
+            </label>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div style="font-size:13px;color:var(--text-muted)">No other students registered yet.</div>
+          {% endif %}
+        </div>
+
         <div style="display:flex;align-items:center;gap:1rem">
           <button type="submit" style="padding:.6rem 1.5rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer">
             Share for peer review

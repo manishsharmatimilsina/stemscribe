@@ -4,6 +4,7 @@ import urllib.request
 import urllib.error
 
 logger = logging.getLogger(__name__)
+from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -606,18 +607,22 @@ Peer's feedback:
 @login_required
 def share_section(request, doc_id):
     doc = get_object_or_404(Document, pk=doc_id, owner=request.user)
+    all_students = User.objects.filter(profile__role='student').exclude(pk=request.user.pk)
     if request.method == 'POST':
         section_label = request.POST.get('section_label', 'custom')
         section_text = request.POST.get('section_text', '').strip()
         question = request.POST.get('question', '').strip()
+        selected_ids = request.POST.getlist('shared_with')
         if section_text:
-            PeerShareRequest.objects.create(
+            share = PeerShareRequest.objects.create(
                 document=doc,
                 created_by=request.user,
                 section_label=section_label,
                 section_text=section_text,
                 question=question,
             )
+            if selected_ids:
+                share.shared_with.set(User.objects.filter(pk__in=selected_ids))
             return redirect('peer_feed')
     latest = doc.versions.order_by('-created_at').first()
     ctx = _student_context(request)
@@ -626,18 +631,21 @@ def share_section(request, doc_id):
         'doc': doc,
         'latest_content': latest.content if latest else '',
         'section_choices': PeerShareRequest.SECTION_CHOICES,
+        'all_students': all_students,
     })
     return render(request, 'core/student_share.html', ctx)
 
 
 @login_required
 def peer_feed(request):
-    # All open requests from other students
+    # Show requests shared with me specifically OR shared with everyone (shared_with is empty)
     requests_qs = PeerShareRequest.objects.filter(
         is_open=True
     ).exclude(
         created_by=request.user
-    ).order_by('-created_at')
+    ).filter(
+        models.Q(shared_with=request.user) | models.Q(shared_with__isnull=True)
+    ).distinct().order_by('-created_at')
 
     # Annotate with whether current user already reviewed each
     feed = []
