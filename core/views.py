@@ -193,23 +193,59 @@ def login_view(request):
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
 
-        # Demo login: auto-create user
         user = authenticate(request, username=username, password=password)
         if user is None:
-            # Create demo account
-            user, created = User.objects.get_or_create(username=username)
-            if created or not user.has_usable_password():
-                user.set_password(password)
-                user.first_name = username.split('@')[0].replace('.', ' ').title()
-                user.save()
-            else:
-                return render(request, 'core/landing.html', {'error': 'Invalid credentials'})
+            return render(request, 'core/landing.html', {'error': 'Invalid email or password.', 'login_role': role})
 
         ensure_profile(user, role)
         login(request, user)
 
         if role == 'student':
             ensure_demo_doc(user)
+            return redirect('student_submit')
+        else:
+            ensure_demo_rubric(user)
+            return redirect('teacher_dashboard')
+
+    return redirect('landing')
+
+def register_view(request):
+    if request.method == 'POST':
+        role = request.POST.get('role', 'student')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        confirm  = request.POST.get('confirm_password', '')
+        full_name = request.POST.get('full_name', '').strip()
+
+        ctx = {'register_role': role, 'reg_username': username, 'reg_full_name': full_name}
+
+        if not username or not password:
+            ctx['reg_error'] = 'Email and password are required.'
+            return render(request, 'core/landing.html', ctx)
+
+        if password != confirm:
+            ctx['reg_error'] = 'Passwords do not match.'
+            return render(request, 'core/landing.html', ctx)
+
+        if len(password) < 6:
+            ctx['reg_error'] = 'Password must be at least 6 characters.'
+            return render(request, 'core/landing.html', ctx)
+
+        if User.objects.filter(username=username).exists():
+            ctx['reg_error'] = 'An account with that email already exists.'
+            return render(request, 'core/landing.html', ctx)
+
+        user = User.objects.create_user(username=username, password=password)
+        if full_name:
+            parts = full_name.split(' ', 1)
+            user.first_name = parts[0]
+            user.last_name = parts[1] if len(parts) > 1 else ''
+            user.save()
+
+        ensure_profile(user, role)
+        login(request, user)
+
+        if role == 'student':
             return redirect('student_submit')
         else:
             ensure_demo_rubric(user)

@@ -82,6 +82,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{background:#234a1e}
 .error{color:#a32d2d;font-size:13px;padding:.5rem 0}
+.reg-error{color:#a32d2d;font-size:13px;padding:.5rem 0}
+.toggle-link{font-size:12px;color:var(--accent-mid);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
+.form-panel{display:none}.form-panel.active{display:block}
 
 @media(max-width:700px){
   .login-section{grid-template-columns:1fr}
@@ -131,47 +134,103 @@ The results indicate that temperature affects enzyme activity <span class="good"
   </div>
 </div>
 
-<!-- ─── LOGIN ─── -->
+<!-- ─── LOGIN / REGISTER ─── -->
 <div class="login-section">
+
+  <!-- STUDENT CARD -->
   <div class="login-card">
-    <h2>Student login</h2>
+    <h2>Student</h2>
     <p>Submit your STEM reports and receive structured AI feedback to improve your scientific writing.</p>
-    {% if error %}<div class="error">{{ error }}</div>{% endif %}
-    <form method="post" action="/login/">
-      {% csrf_token %}
-      <input type="hidden" name="role" value="student">
-      <div class="field">
-        <label>Email address</label>
-        <input type="email" name="username" placeholder="you@school.ac.uk" value="student@imperial.ac.uk" required>
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" name="password" placeholder="••••••••" value="demo1234" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Log in as Student</button>
-    </form>
+
+    <!-- Login panel -->
+    <div class="form-panel active" id="s-login">
+      {% if error and login_role == 'student' or error and not login_role %}<div class="error">{{ error }}</div>{% endif %}
+      <form method="post" action="/login/">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="student">
+        <div class="field"><label>Email address</label>
+          <input type="email" name="username" placeholder="you@school.ac.uk" required></div>
+        <div class="field"><label>Password</label>
+          <input type="password" name="password" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+      <span class="toggle-link" onclick="toggle('s')">New student? Register here</span>
+    </div>
+
+    <!-- Register panel -->
+    <div class="form-panel" id="s-register">
+      {% if reg_error and register_role == 'student' %}<div class="reg-error">{{ reg_error }}</div>{% endif %}
+      <form method="post" action="/register/">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="student">
+        <div class="field"><label>Full name</label>
+          <input type="text" name="full_name" placeholder="Jane Smith" value="{{ reg_full_name|default:'' }}"></div>
+        <div class="field"><label>Email address</label>
+          <input type="email" name="username" placeholder="you@school.ac.uk" value="{{ reg_username|default:'' }}" required></div>
+        <div class="field"><label>Password</label>
+          <input type="password" name="password" placeholder="Min. 6 characters" required></div>
+        <div class="field"><label>Confirm password</label>
+          <input type="password" name="confirm_password" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-primary">Create Student Account</button>
+      </form>
+      <span class="toggle-link" onclick="toggle('s')">Already have an account? Log in</span>
+    </div>
   </div>
 
+  <!-- TEACHER CARD -->
   <div class="login-card">
-    <h2>Teacher login</h2>
+    <h2>Teacher</h2>
     <p>Access your class dashboard, view student progress, manage peer reviews and edit rubrics.</p>
-    <form method="post" action="/login/">
-      {% csrf_token %}
-      <input type="hidden" name="role" value="teacher">
-      <div class="field">
-        <label>Email address</label>
-        <input type="email" name="username" placeholder="teacher@school.ac.uk" value="teacher@imperial.ac.uk" required>
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" name="password" placeholder="••••••••" value="demo1234" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Log in as Teacher</button>
-    </form>
+
+    <!-- Login panel -->
+    <div class="form-panel active" id="t-login">
+      {% if error and login_role == 'teacher' %}<div class="error">{{ error }}</div>{% endif %}
+      <form method="post" action="/login/">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="teacher">
+        <div class="field"><label>Email address</label>
+          <input type="email" name="username" placeholder="teacher@school.ac.uk" required></div>
+        <div class="field"><label>Password</label>
+          <input type="password" name="password" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+      <span class="toggle-link" onclick="toggle('t')">New teacher? Register here</span>
+    </div>
+
+    <!-- Register panel -->
+    <div class="form-panel" id="t-register">
+      {% if reg_error and register_role == 'teacher' %}<div class="reg-error">{{ reg_error }}</div>{% endif %}
+      <form method="post" action="/register/">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="teacher">
+        <div class="field"><label>Full name</label>
+          <input type="text" name="full_name" placeholder="Dr. Smith" value="{{ reg_full_name|default:'' }}"></div>
+        <div class="field"><label>Email address</label>
+          <input type="email" name="username" placeholder="teacher@school.ac.uk" value="{{ reg_username|default:'' }}" required></div>
+        <div class="field"><label>Password</label>
+          <input type="password" name="password" placeholder="Min. 6 characters" required></div>
+        <div class="field"><label>Confirm password</label>
+          <input type="password" name="confirm_password" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-primary">Create Teacher Account</button>
+      </form>
+      <span class="toggle-link" onclick="toggle('t')">Already have an account? Log in</span>
+    </div>
   </div>
+
 </div>
 
 <script>
+// ── LOGIN / REGISTER TOGGLE ──────────────────────────────
+function toggle(prefix){
+  const login = document.getElementById(prefix+'-login');
+  const reg   = document.getElementById(prefix+'-register');
+  login.classList.toggle('active');
+  reg.classList.toggle('active');
+}
+// Auto-open register panel if server returned a reg error
+{% if register_role == 'student' %}toggle('s');{% endif %}
+{% if register_role == 'teacher' %}toggle('t');{% endif %}
+
 // ── BEFORE/AFTER DRAG SLIDER ──────────────────────────────
 (function(){
   const slider = document.getElementById('baSlider');
