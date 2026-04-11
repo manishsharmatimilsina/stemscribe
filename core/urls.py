@@ -28,6 +28,13 @@ urlpatterns = [
     path('teacher/upload/', views.teacher_upload, name='teacher_upload'),
     path('teacher/feedback/', views.teacher_class_feedback, name='teacher_feedback'),
 
+    # Peer Review
+    path('peer/feed/', views.peer_feed, name='peer_feed'),
+    path('peer/review/<int:share_id>/', views.peer_review, name='peer_review'),
+    path('peer/share/<int:doc_id>/', views.share_section, name='share_section'),
+    path('peer/close/<int:share_id>/', views.close_share, name='close_share'),
+    path('peer/activity/', views.my_peer_activity, name='peer_activity'),
+
     # API
     path('api/analyse/', views.api_analyse, name='api_analyse'),
 ]

@@ -36,14 +36,18 @@
     <a href="{% url 'student_analysis' doc.pk %}" class="sb-sub-item {% if page == 'analysis' %}active{% endif %}">Open</a>
     <a href="{% url 'student_version' doc.pk %}" class="sb-sub-item {% if page == 'version' %}active{% endif %}">Version History</a>
     <a href="{% url 'student_dashboard' doc.pk %}" class="sb-sub-item {% if page == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="{% url 'share_section' doc.pk %}" class="sb-sub-item {% if page == 'share' %}active{% endif %}">Share for peer review</a>
   </div>
   {% endfor %}
 </div>
 
 <div class="sb-section">
-  <div class="sb-section-label">Peer Edits ({{ peer_edit_count }})</div>
-  <div class="sb-item"><span class="sb-icon">👤</span> Student A (anonymous)</div>
-  <div class="sb-item"><span class="sb-icon">👤</span> Student B (anonymous)</div>
-  <div class="sb-item"><span class="sb-icon">👤</span> Student C (anonymous)</div>
+  <div class="sb-section-label">Peer Review</div>
+  <a href="{% url 'peer_feed' %}" class="sb-item {% if page == 'peer_feed' %}active{% endif %}">
+    <span class="sb-icon">◎</span> Browse peer requests
+  </a>
+  <a href="{% url 'peer_activity' %}" class="sb-item {% if page == 'peer_activity' %}active{% endif %}">
+    <span class="sb-icon">★</span> My contributions
+  </a>
 </div>
 {% endblock %}

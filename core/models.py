@@ -107,3 +107,43 @@ class PeerEdit(models.Model):
     @property
     def total_impact(self):
         return self.score_impact_understanding + self.score_impact_analysis + self.score_impact_communication
+
+
+class PeerShareRequest(models.Model):
+    SECTION_CHOICES = [
+        ('introduction', 'Introduction'),
+        ('method', 'Method'),
+        ('results', 'Results'),
+        ('discussion', 'Discussion'),
+        ('conclusion', 'Conclusion'),
+        ('custom', 'Custom section'),
+    ]
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='share_requests')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shares_created')
+    section_label = models.CharField(max_length=50, choices=SECTION_CHOICES, default='custom')
+    section_text = models.TextField()
+    question = models.TextField(blank=True)
+    is_open = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.created_by.username} — {self.get_section_label_display()}"
+
+    def feedback_count(self):
+        return self.feedbacks.count()
+
+
+class PeerFeedback(models.Model):
+    share_request = models.ForeignKey(PeerShareRequest, on_delete=models.CASCADE, related_name='feedbacks')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks_given')
+    feedback_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    ai_contribution_score = models.IntegerField(default=0)  # 0–100 overall
+    ai_score_detail = models.TextField(blank=True, default='{}')  # JSON
+    scored = models.BooleanField(default=False)
+
+    def get_score_detail(self):
+        try:
+            return json.loads(self.ai_score_detail)
+        except Exception:
+            return {}

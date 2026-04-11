@@ -1,0 +1,105 @@
+{% extends "core/student_base.html" %}
+{% block title %}Share for Peer Review — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Share for Peer Review</div>
+      <div class="page-sub">Select a section from <strong>{{ doc.title }}</strong> to share with classmates</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:1.5rem;max-width:960px">
+
+    <!-- LEFT: Share form -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.6rem">
+      <form method="post">
+        {% csrf_token %}
+
+        <div style="margin-bottom:1.1rem">
+          <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.4rem">Section</label>
+          <select name="section_label" id="sectionSelect"
+            style="width:100%;padding:.6rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--text)">
+            {% for value, label in section_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="margin-bottom:1.1rem">
+          <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.4rem">
+            Text to share
+            <span style="font-weight:400;text-transform:none;font-size:11px"> — paste or edit the section you want reviewed</span>
+          </label>
+          <textarea name="section_text" id="sectionText" rows="10" required
+            placeholder="Paste the section of your report you'd like peers to review..."
+            style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.7;resize:vertical"></textarea>
+        </div>
+
+        <div style="margin-bottom:1.4rem">
+          <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.4rem">
+            Question for peers <span style="font-weight:400;text-transform:none">(optional)</span>
+          </label>
+          <input type="text" name="question" placeholder="e.g. Is my discussion of enzyme denaturation scientifically accurate?"
+            style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text)">
+        </div>
+
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button type="submit" style="padding:.6rem 1.5rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer">
+            Share for peer review
+          </button>
+          <a href="{% url 'peer_feed' %}" style="font-size:13px;color:var(--text-muted);text-decoration:none">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT: Document preview + quick-fill buttons -->
+    <div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.6rem">
+        Quick-fill from document
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem">
+        {% for value, label in section_choices %}
+        {% if value != 'custom' %}
+        <button type="button" onclick="fillSection('{{ value }}')"
+          style="padding:.45rem .9rem;background:#fff;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-align:left;color:var(--text)">
+          Extract {{ label }}
+        </button>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.6rem">
+        Document preview
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem;max-height:340px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text-muted);white-space:pre-wrap" id="docPreview">{{ latest_content }}</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const fullText = {{ latest_content|escapejs|safe }};
+
+function fillSection(sectionName) {
+  const label = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+  const lines = fullText.split('\n');
+  let capturing = false;
+  let result = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.toLowerCase() === label.toLowerCase()) {
+      capturing = true;
+      continue;
+    }
+    if (capturing) {
+      // Stop at next section header (single word line with capital)
+      if (/^[A-Z][a-z]+$/.test(line) && line !== label) break;
+      result.push(lines[i]);
+    }
+  }
+  const extracted = result.join('\n').trim();
+  document.getElementById('sectionText').value = extracted || fullText;
+  document.getElementById('sectionSelect').value = sectionName;
+}
+</script>
+{% endblock %}

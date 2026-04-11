@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit
+from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit, PeerShareRequest, PeerFeedback
 
 # ──────────────────────────────────────────
 # DEMO DATA
@@ -561,6 +561,151 @@ def _teacher_context(request):
     students = User.objects.filter(profile__role='student').exclude(pk=request.user.pk)
     criteria = RubricCriterion.objects.filter(teacher=request.user)
     return {'students': students, 'rubric': criteria, 'user': request.user}
+
+# ──────────────────────────────────────────
+# PEER REVIEW SYSTEM
+# ──────────────────────────────────────────
+
+def _score_peer_feedback(feedback):
+    """Call OpenAI to score a peer's feedback contribution."""
+    prompt = f"""You are evaluating a student's peer review comment on a STEM lab report section.
+Score this feedback on three dimensions (0–100 each) and return ONLY a JSON object:
+
+{{
+  "specificity": 0-100,
+  "scientific_accuracy": 0-100,
+  "constructiveness": 0-100,
+  "overall": 0-100,
+  "summary": "One sentence explaining the score."
+}}
+
+Section being reviewed:
+{feedback.share_request.section_text}
+
+Question the author asked (if any):
+{feedback.share_request.question or "None"}
+
+Peer's feedback:
+{feedback.feedback_text}"""
+
+    result = call_claude(prompt)
+    if result and 'overall' in result:
+        feedback.ai_contribution_score = result.get('overall', 0)
+        feedback.ai_score_detail = json.dumps(result)
+        feedback.scored = True
+        feedback.save()
+
+
+@login_required
+def share_section(request, doc_id):
+    doc = get_object_or_404(Document, pk=doc_id, owner=request.user)
+    if request.method == 'POST':
+        section_label = request.POST.get('section_label', 'custom')
+        section_text = request.POST.get('section_text', '').strip()
+        question = request.POST.get('question', '').strip()
+        if section_text:
+            PeerShareRequest.objects.create(
+                document=doc,
+                created_by=request.user,
+                section_label=section_label,
+                section_text=section_text,
+                question=question,
+            )
+            return redirect('peer_feed')
+    latest = doc.versions.order_by('-created_at').first()
+    ctx = _student_context(request)
+    ctx.update({
+        'page': 'share',
+        'doc': doc,
+        'latest_content': latest.content if latest else '',
+        'section_choices': PeerShareRequest.SECTION_CHOICES,
+    })
+    return render(request, 'core/student_share.html', ctx)
+
+
+@login_required
+def peer_feed(request):
+    # All open requests from other students
+    requests_qs = PeerShareRequest.objects.filter(
+        is_open=True
+    ).exclude(
+        created_by=request.user
+    ).order_by('-created_at')
+
+    # Annotate with whether current user already reviewed each
+    feed = []
+    for req in requests_qs:
+        already_reviewed = req.feedbacks.filter(reviewer=request.user).exists()
+        feed.append({'req': req, 'already_reviewed': already_reviewed})
+
+    ctx = _student_context(request)
+    ctx.update({'page': 'peer_feed', 'feed': feed})
+    return render(request, 'core/peer_feed.html', ctx)
+
+
+@login_required
+def peer_review(request, share_id):
+    share = get_object_or_404(PeerShareRequest, pk=share_id)
+
+    # Author can view their own request but not submit feedback on it
+    is_own = share.created_by == request.user
+    already_reviewed = share.feedbacks.filter(reviewer=request.user).exists()
+
+    if request.method == 'POST' and not is_own and not already_reviewed and share.is_open:
+        feedback_text = request.POST.get('feedback_text', '').strip()
+        if feedback_text:
+            fb = PeerFeedback.objects.create(
+                share_request=share,
+                reviewer=request.user,
+                feedback_text=feedback_text,
+            )
+            _score_peer_feedback(fb)
+            return redirect('peer_review', share_id=share_id)
+
+    feedbacks = share.feedbacks.order_by('created_at')
+    my_feedback = feedbacks.filter(reviewer=request.user).first()
+
+    ctx = _student_context(request)
+    ctx.update({
+        'page': 'peer_feed',
+        'share': share,
+        'feedbacks': feedbacks,
+        'my_feedback': my_feedback,
+        'is_own': is_own,
+        'already_reviewed': already_reviewed,
+    })
+    return render(request, 'core/peer_review.html', ctx)
+
+
+@login_required
+def my_peer_activity(request):
+    """Shows peer reviews the user gave and received, with AI contribution scores."""
+    given = PeerFeedback.objects.filter(reviewer=request.user).order_by('-created_at')
+    received = PeerFeedback.objects.filter(
+        share_request__created_by=request.user
+    ).order_by('-created_at')
+
+    avg_score = 0
+    if given.exists():
+        avg_score = round(sum(f.ai_contribution_score for f in given) / given.count())
+
+    ctx = _student_context(request)
+    ctx.update({
+        'page': 'peer_activity',
+        'given': given,
+        'received': received,
+        'avg_score': avg_score,
+    })
+    return render(request, 'core/peer_activity.html', ctx)
+
+
+@login_required
+def close_share(request, share_id):
+    share = get_object_or_404(PeerShareRequest, pk=share_id, created_by=request.user)
+    share.is_open = False
+    share.save()
+    return redirect('peer_feed')
+
 
 @login_required
 def teacher_dashboard(request):

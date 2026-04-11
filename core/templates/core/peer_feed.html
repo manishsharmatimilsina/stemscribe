@@ -1,0 +1,57 @@
+{% extends "core/student_base.html" %}
+{% block title %}Peer Review Feed — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Peer Review Feed</div>
+      <div class="page-sub">Help classmates improve their STEM writing — earn contribution scores</div>
+    </div>
+  </div>
+
+  {% if not feed %}
+  <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted)">
+    <div style="font-size:2rem;margin-bottom:1rem">◎</div>
+    <div style="font-size:15px;font-weight:500">No open peer review requests yet.</div>
+    <div style="font-size:13px;margin-top:.5rem">Share a section of your own work to get started.</div>
+  </div>
+  {% else %}
+  <div style="display:grid;gap:1rem;max-width:760px">
+    {% for item in feed %}
+    {% with req=item.req %}
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.4rem 1.6rem">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem">
+        <span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.06em">
+          {{ req.get_section_label_display }}
+        </span>
+        <span style="font-size:12px;color:var(--text-muted)">{{ req.created_at|date:"j M Y, H:i" }}</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">{{ req.feedback_count }} review{{ req.feedback_count|pluralize }}</span>
+      </div>
+
+      <div style="font-size:13px;color:var(--text-muted);background:#f9f8f6;border-radius:6px;padding:.85rem 1rem;margin-bottom:.9rem;line-height:1.7;max-height:120px;overflow:hidden;position:relative">
+        {{ req.section_text|truncatewords:60 }}
+        <div style="position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,#f9f8f6)"></div>
+      </div>
+
+      {% if req.question %}
+      <div style="font-size:13px;margin-bottom:.9rem">
+        <span style="font-weight:600;color:var(--text)">Question: </span>
+        <span style="color:var(--text-muted)">{{ req.question }}</span>
+      </div>
+      {% endif %}
+
+      {% if item.already_reviewed %}
+      <span style="font-size:12px;color:var(--accent-mid);font-weight:500">✓ You've reviewed this</span>
+      <a href="{% url 'peer_review' req.pk %}" style="margin-left:1rem;font-size:12px;color:var(--text-muted);text-decoration:underline">View feedback</a>
+      {% else %}
+      <a href="{% url 'peer_review' req.pk %}" style="display:inline-block;padding:.5rem 1.2rem;background:var(--accent);color:#fff;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none">
+        Give feedback
+      </a>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

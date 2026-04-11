@@ -1,0 +1,100 @@
+{% extends "core/student_base.html" %}
+{% block title %}My Peer Contributions — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">My Peer Contributions</div>
+      <div class="page-sub">Feedback you've given and received, scored by AI</div>
+    </div>
+    {% if avg_score %}
+    <div style="text-align:center;background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1.6rem">
+      <div style="font-size:2rem;font-weight:700;color:var(--accent)">{{ avg_score }}</div>
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Avg contribution score</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:960px">
+
+    <!-- Feedback GIVEN -->
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)">
+        Feedback you gave ({{ given.count }})
+      </div>
+      {% for fb in given %}
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.4rem">
+          <span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px">
+            {{ fb.share_request.get_section_label_display }}
+          </span>
+          <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y" }}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:.6rem">{{ fb.feedback_text }}</div>
+        {% if fb.scored %}
+        <div style="background:#f9f8f6;border-radius:6px;padding:.6rem .8rem">
+          <div style="display:flex;gap:1.2rem;margin-bottom:.3rem">
+            <div style="text-align:center">
+              <div style="font-size:1.2rem;font-weight:700;color:var(--accent)">{{ fb.ai_contribution_score }}</div>
+              <div style="font-size:10px;color:var(--text-muted)">Overall</div>
+            </div>
+            {% with d=fb.get_score_detail %}
+            <div style="text-align:center">
+              <div style="font-size:1.2rem;font-weight:700;color:var(--accent-mid)">{{ d.specificity }}</div>
+              <div style="font-size:10px;color:var(--text-muted)">Specific</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:1.2rem;font-weight:700;color:var(--accent-mid)">{{ d.constructiveness }}</div>
+              <div style="font-size:10px;color:var(--text-muted)">Construct.</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:1.2rem;font-weight:700;color:var(--accent-mid)">{{ d.scientific_accuracy }}</div>
+              <div style="font-size:10px;color:var(--text-muted)">Accuracy</div>
+            </div>
+            {% if d.summary %}
+            <div style="flex:1;font-size:11px;color:var(--text-muted);font-style:italic;align-self:center">{{ d.summary }}</div>
+            {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+        {% else %}
+        <div style="font-size:11px;color:var(--text-muted)">AI scoring pending…</div>
+        {% endif %}
+        <a href="{% url 'peer_review' fb.share_request.pk %}" style="font-size:11px;color:var(--accent-mid);text-decoration:underline;display:inline-block;margin-top:.4rem">View request →</a>
+      </div>
+      {% empty %}
+      <div style="font-size:13px;color:var(--text-muted);padding:1rem 0">You haven't given any feedback yet.<br>
+        <a href="{% url 'peer_feed' %}" style="color:var(--accent-mid)">Browse the peer feed →</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Feedback RECEIVED -->
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)">
+        Feedback you received ({{ received.count }})
+      </div>
+      {% for fb in received %}
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.4rem">
+          <span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px">
+            {{ fb.share_request.get_section_label_display }}
+          </span>
+          <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y" }}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:.4rem">{{ fb.feedback_text }}</div>
+        {% if fb.scored %}
+        <div style="font-size:11px;color:var(--accent-mid);font-weight:500">Peer contribution score: {{ fb.ai_contribution_score }}/100</div>
+        {% endif %}
+        <a href="{% url 'peer_review' fb.share_request.pk %}" style="font-size:11px;color:var(--accent-mid);text-decoration:underline;display:inline-block;margin-top:.3rem">View thread →</a>
+      </div>
+      {% empty %}
+      <div style="font-size:13px;color:var(--text-muted);padding:1rem 0">No feedback received yet.<br>
+        Share a section of your work to get started.
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
