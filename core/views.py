@@ -619,8 +619,8 @@ def _teacher_context(request):
 # ──────────────────────────────────────────
 
 def _score_peer_feedback(feedback):
-    """Call OpenAI to score a peer's feedback contribution."""
-    prompt = f"""You are evaluating a student's peer review comment on a STEM lab report section.
+    """Call OpenAI to score a peer's feedback contribution and suggest improvements."""
+    score_prompt = f"""You are evaluating a student's peer review comment on a STEM lab report section.
 Score this feedback on three dimensions (0–100 each) and return ONLY a JSON object:
 
 {{
@@ -640,12 +640,36 @@ Question the author asked (if any):
 Peer's feedback:
 {feedback.feedback_text}"""
 
-    result = call_claude(prompt)
+    result = call_claude(score_prompt)
     if result and 'overall' in result:
         feedback.ai_contribution_score = result.get('overall', 0)
         feedback.ai_score_detail = json.dumps(result)
         feedback.scored = True
         feedback.save()
+
+    # Generate AI suggestions to improve the feedback
+    improvement_prompt = f"""You are a writing coach helping a student improve their peer feedback on a STEM lab report.
+
+The student reviewed this section:
+"{feedback.share_request.section_text}"
+
+And gave this feedback:
+"{feedback.feedback_text}"
+
+Provide 2-3 specific, actionable suggestions to make this feedback more helpful. Focus on:
+- Being more specific (quote exact phrases if not already done)
+- Adding scientific context or reasoning
+- Offering concrete revisions
+
+Format as a numbered list (1., 2., 3.) with short, direct suggestions."""
+
+    improvement = call_claude(improvement_prompt)
+    if improvement and isinstance(improvement, dict) and 'suggestions' in improvement:
+        feedback.ai_feedback_text = improvement.get('suggestions', '')
+    elif improvement and isinstance(improvement, str):
+        feedback.ai_feedback_text = improvement
+    feedback.ai_feedback_generated = True
+    feedback.save()
 
 
 @login_required
@@ -708,30 +732,51 @@ def peer_review(request, share_id):
 
     # Author can view their own request but not submit feedback on it
     is_own = share.created_by == request.user
-    already_reviewed = share.feedbacks.filter(reviewer=request.user).exists()
+    my_feedback = share.feedbacks.filter(reviewer=request.user).first()
+    already_submitted = my_feedback and my_feedback.is_submitted
 
-    if request.method == 'POST' and not is_own and not already_reviewed and share.is_open:
+    if request.method == 'POST' and not is_own and share.is_open:
         feedback_text = request.POST.get('feedback_text', '').strip()
+        action = request.POST.get('action', 'save')  # 'save' = save draft, 'submit' = submit to student
+
         if feedback_text:
-            fb = PeerFeedback.objects.create(
-                share_request=share,
-                reviewer=request.user,
-                feedback_text=feedback_text,
-            )
-            _score_peer_feedback(fb)
+            if not my_feedback:
+                # Create new draft feedback
+                my_feedback = PeerFeedback.objects.create(
+                    share_request=share,
+                    reviewer=request.user,
+                    feedback_text=feedback_text,
+                    is_submitted=False,
+                )
+                _score_peer_feedback(my_feedback)
+            else:
+                # Update existing draft
+                my_feedback.feedback_text = feedback_text
+                my_feedback.scored = False
+                my_feedback.ai_feedback_generated = False
+                my_feedback.save()
+                _score_peer_feedback(my_feedback)
+
+            # If submitting, mark as submitted
+            if action == 'submit':
+                my_feedback.is_submitted = True
+                my_feedback.save()
+                return redirect('peer_activity')
+
+            # Otherwise redirect back to see AI feedback
             return redirect('peer_review', share_id=share_id)
 
-    feedbacks = share.feedbacks.order_by('created_at')
-    my_feedback = feedbacks.filter(reviewer=request.user).first()
+    # Show only submitted feedbacks to others (not drafts)
+    submitted_feedbacks = share.feedbacks.filter(is_submitted=True).order_by('created_at')
 
     ctx = _student_context(request)
     ctx.update({
         'page': 'peer_feed',
         'share': share,
-        'feedbacks': feedbacks,
+        'submitted_feedbacks': submitted_feedbacks,
         'my_feedback': my_feedback,
         'is_own': is_own,
-        'already_reviewed': already_reviewed,
+        'already_submitted': already_submitted,
     })
     return render(request, 'core/peer_review.html', ctx)
 
@@ -764,6 +809,31 @@ def close_share(request, share_id):
     share.is_open = False
     share.save()
     return redirect('peer_feed')
+
+
+@login_required
+def edit_peer_feedback(request, feedback_id):
+    fb = get_object_or_404(PeerFeedback, pk=feedback_id, reviewer=request.user)
+    share = fb.share_request
+
+    if request.method == 'POST':
+        new_text = request.POST.get('feedback_text', '').strip()
+        if new_text:
+            fb.feedback_text = new_text
+            fb.scored = False  # Reset score so it recalculates
+            fb.ai_feedback_generated = False
+            fb.save()
+            # Re-score the updated feedback
+            _score_peer_feedback(fb)
+            return redirect('peer_activity')
+
+    ctx = _student_context(request)
+    ctx.update({
+        'page': 'peer_feed',
+        'feedback': fb,
+        'share': share,
+    })
+    return render(request, 'core/edit_peer_feedback.html', ctx)
 
 
 @login_required

@@ -40,22 +40,75 @@
       </div>
       {% endif %}
 
-      <!-- Feedback form -->
-      {% if not is_own and not already_reviewed and share.is_open %}
-      <form method="post">
-        {% csrf_token %}
-        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.4rem 1.6rem;margin-bottom:.75rem">
-          <textarea name="feedback_text" rows="6" placeholder="Give specific, constructive feedback. Point to exact phrases where possible and suggest improvements..."
-            style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.6"></textarea>
+      <!-- Feedback workflow -->
+      {% if not is_own and not already_submitted and share.is_open %}
+        {% if my_feedback and my_feedback.ai_feedback_generated %}
+        <!-- Draft saved - showing AI feedback for review -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.4rem 1.6rem;margin-bottom:1rem">
+          <div style="font-size:13px;font-weight:600;margin-bottom:.75rem">Your draft feedback</div>
+          <div style="background:#f9f8f6;border-radius:6px;padding:.9rem;margin-bottom:1rem;font-size:13px;line-height:1.6">{{ my_feedback.feedback_text }}</div>
+
+          {% if my_feedback.scored %}
+          <div style="background:var(--u-bg);border:1px solid var(--u-border);border-radius:6px;padding:.8rem;margin-bottom:1rem">
+            <div style="font-size:11px;font-weight:600;color:var(--u-text);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">AI Score</div>
+            <div style="display:flex;gap:1.2rem;margin-bottom:.5rem;flex-wrap:wrap">
+              <div style="text-align:center">
+                <div style="font-size:1.4rem;font-weight:700;color:var(--u-text)">{{ my_feedback.ai_contribution_score }}</div>
+                <div style="font-size:10px;color:var(--u-text)">Overall</div>
+              </div>
+              {% with d=my_feedback.get_score_detail %}
+              <div style="text-align:center">
+                <div style="font-size:1.4rem;font-weight:700;color:var(--u-text)">{{ d.specificity }}</div>
+                <div style="font-size:10px;color:var(--u-text)">Specific</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:1.4rem;font-weight:700;color:var(--u-text)">{{ d.constructiveness }}</div>
+                <div style="font-size:10px;color:var(--u-text)">Balanced</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:1.4rem;font-weight:700;color:var(--u-text)">{{ d.scientific_accuracy }}</div>
+                <div style="font-size:10px;color:var(--u-text)">Actionable</div>
+              </div>
+              {% endwith %}
+            </div>
+            {% if d.summary %}<div style="font-size:12px;color:var(--u-text);font-style:italic">{{ d.summary }}</div>{% endif %}
+          </div>
+          {% endif %}
+
+          {% if my_feedback.ai_feedback_text %}
+          <div style="background:#ece8f5;border:1px solid #9a87c8;border-radius:6px;padding:.9rem;margin-bottom:1rem">
+            <div style="font-size:11px;font-weight:600;color:#4a3880;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">💡 AI suggestions to improve</div>
+            <div style="font-size:12px;color:#4a3880;line-height:1.6;white-space:pre-wrap">{{ my_feedback.ai_feedback_text }}</div>
+          </div>
+          {% endif %}
+
+          <!-- Edit or submit -->
+          <form method="post" style="display:flex;gap:.65rem">
+            {% csrf_token %}
+            <input type="hidden" name="feedback_text" value="{{ my_feedback.feedback_text }}">
+            <a href="{% url 'edit_peer_feedback' my_feedback.pk %}" class="btn btn-secondary btn-sm">✎ Edit feedback</a>
+            <button type="submit" name="action" value="submit" class="btn btn-primary btn-sm">Send to student →</button>
+          </form>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:12px;color:var(--text-muted)">AI will score your contribution after submission.</span>
-          <button type="submit" style="padding:.55rem 1.4rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer">
-            Submit feedback
-          </button>
-        </div>
-      </form>
-      {% elif not is_own and already_reviewed %}
+
+        {% else %}
+        <!-- Initial feedback form -->
+        <form method="post">
+          {% csrf_token %}
+          <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.4rem 1.6rem;margin-bottom:.75rem">
+            <textarea name="feedback_text" rows="6" placeholder="Give specific, constructive feedback. Point to exact phrases where possible and suggest improvements..."
+              style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.6"></textarea>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text-muted)">AI will review and score your feedback before you send it.</span>
+            <button type="submit" name="action" value="save" style="padding:.55rem 1.4rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer">
+              Save &amp; review with AI
+            </button>
+          </div>
+        </form>
+        {% endif %}
+
+      {% elif not is_own and already_submitted %}
       <div style="background:var(--accent-light);border:1px solid #c8e09a;border-radius:var(--r);padding:1rem 1.4rem">
         <div style="font-size:13px;font-weight:600;color:var(--accent)">✓ You've submitted feedback on this section.</div>
         {% if my_feedback %}

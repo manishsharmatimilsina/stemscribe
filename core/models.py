@@ -139,9 +139,13 @@ class PeerFeedback(models.Model):
     reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks_given')
     feedback_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_submitted = models.BooleanField(default=False)  # False = draft, True = sent to student
     ai_contribution_score = models.IntegerField(default=0)  # 0–100 overall
     ai_score_detail = models.TextField(blank=True, default='{}')  # JSON
     scored = models.BooleanField(default=False)
+    ai_feedback_text = models.TextField(blank=True)  # AI suggestions on how to improve this feedback
+    ai_feedback_generated = models.BooleanField(default=False)
 
     def get_score_detail(self):
         try:
