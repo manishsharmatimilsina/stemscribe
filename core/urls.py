@@ -34,6 +34,7 @@ urlpatterns = [
     path('peer/share/<int:doc_id>/', views.share_section, name='share_section'),
     path('peer/close/<int:share_id>/', views.close_share, name='close_share'),
     path('peer/activity/', views.my_peer_activity, name='peer_activity'),
+    path('peer/edit/<int:feedback_id>/', views.edit_peer_feedback, name='edit_peer_feedback'),
     path('peer/delete/<int:feedback_id>/', views.delete_peer_feedback, name='delete_peer_feedback'),
 
     # Teacher comments

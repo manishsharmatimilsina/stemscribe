@@ -31,8 +31,16 @@
           <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y" }}</span>
         </div>
         <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:.6rem">{{ fb.feedback_text }}</div>
+
+        {% if fb.ai_feedback_generated and fb.ai_feedback_text %}
+        <div style="background:#ece8f5;border-radius:6px;padding:.7rem .9rem;margin-bottom:.5rem;border-left:3px solid #534AB7">
+          <div style="font-size:11px;font-weight:600;color:#4a3880;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem">💡 AI Suggestions</div>
+          <div style="font-size:12px;color:#4a3880;line-height:1.5;white-space:pre-wrap">{{ fb.ai_feedback_text }}</div>
+        </div>
+        {% endif %}
+
         {% if fb.scored %}
-        <div style="background:#f9f8f6;border-radius:6px;padding:.6rem .8rem">
+        <div style="background:#f9f8f6;border-radius:6px;padding:.6rem .8rem;margin-bottom:.5rem">
           <div style="display:flex;gap:1.2rem;margin-bottom:.3rem">
             <div style="text-align:center">
               <div style="font-size:1.2rem;font-weight:700;color:var(--accent)">{{ fb.ai_contribution_score }}</div>
@@ -58,8 +66,14 @@
           </div>
         </div>
         {% else %}
-        <div style="font-size:11px;color:var(--text-muted)">AI scoring pending…</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:.5rem">AI scoring pending…</div>
         {% endif %}
+
+        <div style="display:flex;gap:.65rem">
+          <a href="{% url 'edit_peer_feedback' fb.pk %}" style="font-size:11px;color:var(--accent-mid);text-decoration:underline">✎ Edit</a>
+          <span style="color:var(--border)">·</span>
+          <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y" }}</span>
+        </div>
         <a href="{% url 'peer_review' fb.share_request.pk %}" style="font-size:11px;color:var(--accent-mid);text-decoration:underline;display:inline-block;margin-top:.4rem">View request →</a>
       </div>
       {% empty %}
