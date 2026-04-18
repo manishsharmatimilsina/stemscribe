@@ -1,18 +1,18 @@
 # StemScribe — AI-Guided STEM Writing Platform
 
-A Django web app for AI-powered peer feedback on STEM lab reports.
+A Django web app for AI-powered feedback on STEM lab reports. Students submit reports, receive AI analysis, get peer feedback, and collaborate through a structured review system with teacher oversight.
 
 ## Quick Start
 
 ```bash
-# 1. Install Django
+# 1. Install dependencies
 pip install -r requirements.txt
 
 # 2. Run migrations
 python manage.py migrate
 
-# 3. Set your Anthropic API key (optional — falls back to demo data)
-export ANTHROPIC_API_KEY=sk-ant-your-key-here
+# 3. Set your OpenAI API key (required for AI feedback)
+export OPENAI_API_KEY=sk-your-key-here
 
 # 4. Start the server
 python manage.py runserver
@@ -20,34 +20,86 @@ python manage.py runserver
 
 Then open http://127.0.0.1:8000
 
-## Demo Login Credentials
+## Registration & Login
 
-**Student:** student@imperial.ac.uk / demo1234
-**Teacher:** teacher@imperial.ac.uk / demo1234
+Users register with email and password. Roles (Student/Teacher) are assigned during registration.
 
-(Any email/password combination will work — accounts are auto-created on first login)
+**Demo Accounts:**
+- **Student:** student@imperial.ac.uk / demo1234
+- **Teacher:** teacher@imperial.ac.uk / demo1234
 
-## Features
+## Core Features
 
-### Student
-- Landing page with drag slider before/after comparison
-- Submit reports via paste or file upload (.txt, .pdf, .docx)
-- AI analysis via Claude API (falls back to demo data if no key set)
-- Colour-coded highlighted report with clickable issue marks
-- Feedback panel: approve/reject each AI suggestion
-- Approving creates a new document version automatically
-- Version history with side-by-side score panel
-- Personal dashboard: score progression bars, classroom impact chain, collaborator level bar
-- Sidebar with expandable document tree (Open / Version History / Dashboard)
+### Student Workflow
 
-### Teacher
-- Class dashboard with Statistics / Feedback tabs
-- Flags for low-participation and struggling students
-- Top collaborators leaderboard
-- Per-student view: documents, peer feedback outputs, score breakdown
-- Class statistics table with Understanding / Analysis / Communication scores
-- Rubric editor: add, edit, delete criteria per pillar (modal interface)
-- Upload documents page
+**1. Report Submission**
+- Paste or upload report (.txt, .pdf, .docx)
+- Edit inline before submission
+
+**2. AI Analysis**
+- OpenAI Claude API analyzes reports on Understanding / Analysis / Communication
+- Colour-coded highlight report with inline issue marks
+- Review and approve/reject each AI suggestion
+- Approved changes create new document versions automatically
+
+**3. Peer Feedback**
+- Share specific sections (Introduction, Method, Results, Discussion, Conclusion, Custom) with peers
+- Include optional question for reviewers
+- Browse all open peer requests in feed
+- Receive AI-scored feedback from peers
+- Track contribution stats and leaderboard ranking
+
+**4. Collaborative Editing**
+- View feedback from peers and teacher in document context
+- Edit and revise inline
+- Download formatted report as file
+- Version history with score progression
+
+### Peer Review System
+
+**Peer Contribution Workflow:**
+1. **Browse requests** — View all shared sections from classmates
+2. **Give feedback** — Submit initial feedback draft
+3. **AI review** — Claude scores feedback on:
+   - Specificity (is it detailed and specific?)
+   - Constructiveness (is it balanced and helpful?)
+   - Scientific accuracy (is it technically correct?)
+   - Overall contribution score (0–100)
+4. **Edit & improve** — Review AI suggestions and revise feedback
+5. **Submit** — Send final feedback to the student
+
+**Peer Activity Dashboard:**
+- View feedback you've given (with AI scores and suggestions)
+- View feedback you've received (with contributor scores)
+- Edit draft feedback before it reaches the student
+- Track your average contribution score
+
+### Teacher Dashboard
+
+**Peer Oversight:**
+- Class leaderboard showing peer contribution scores
+- Complete activity log of all peer feedback
+- Monitor peer feedback quality and engagement
+- View individual student contribution stats
+
+**Student Management:**
+- Per-student view of documents, versions, and feedback
+- Add teacher comments on student work
+- View peer feedback received by each student
+- Track class statistics (Understanding / Analysis / Communication scores)
+- Custom rubric management (add, edit, delete criteria per pillar)
+
+## Models & Database
+
+```
+UserProfile          — User role (Student/Teacher) + class assignment
+Document             — Student report container
+DocumentVersion      — Individual versions with AI scores
+RubricCriterion      — Teacher-defined grading criteria
+PeerShareRequest     — Section shared for peer review
+PeerFeedback         — Peer feedback with draft/submitted status + AI scoring
+TeacherComment       — Teacher annotations on documents
+```
 
 ## Architecture
 
@@ -55,33 +107,43 @@ Then open http://127.0.0.1:8000
 stemscribe/
 ├── manage.py
 ├── requirements.txt
-├── stemscribe/          # Django project settings
+├── stemscribe/
 │   ├── settings.py
 │   └── urls.py
-└── core/                # Main app
-    ├── models.py        # UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit
-    ├── views.py         # All student + teacher views + Claude API call
+└── core/
+    ├── models.py
+    ├── views.py          # 30+ views for student/peer/teacher flows
     ├── urls.py
     ├── templatetags/
-    │   └── stem_tags.py # highlight_report filter
+    │   └── stem_tags.py  # Report formatting filters
     └── templates/core/
-        ├── base.html           # Shell with sidebar
-        ├── landing.html        # Before/after drag slider + login
-        ├── student_base.html   # Student sidebar nav
+        ├── landing.html
+        ├── registration.html
+        ├── student_base.html
         ├── student_submit.html
         ├── student_analysis.html
         ├── student_version.html
         ├── student_dashboard.html
-        ├── student_howto.html
+        ├── peer_feed.html
+        ├── peer_review.html
+        ├── peer_activity.html
+        ├── edit_peer_feedback.html
         ├── teacher_base.html
         ├── teacher_dashboard.html
         ├── teacher_stats.html
         ├── teacher_student.html
         ├── teacher_rubric.html
         ├── teacher_upload.html
-        └── teacher_feedback.html
+        ├── teacher_peer_overview.html
+        └── [more templates]
 ```
 
 ## API Integration
 
-The app calls `https://api.anthropic.com/v1/messages` using only Python's built-in `urllib` — no extra packages needed. Set `ANTHROPIC_API_KEY` as an environment variable. Without a key, the app uses realistic demo data automatically.
+**OpenAI Claude:**
+- Report analysis (Understanding / Analysis / Communication scores)
+- Peer feedback quality scoring (Specificity / Constructiveness / Scientific Accuracy)
+- AI suggestions to improve peer feedback
+- Uses Python's built-in `urllib` — no extra dependencies
+
+Set `OPENAI_API_KEY` as environment variable. Required for full functionality.
