@@ -716,80 +716,6 @@ Then tail logs while developing:
 python manage.py runserver 2>&1 | grep -E "(ERROR|WARNING)"
 ```
 
----
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. "ModuleNotFoundError: No module named 'django'"
-
-**Solution:**
-```bash
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-#### 2. "no such table: core_peerfeedback"
-
-**Solution:** Database schema mismatch. Run:
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-#### 3. "Reverse for 'edit_peer_feedback' not found"
-
-**Cause:** URL pattern missing from `urls.py`  
-**Solution:** Ensure this line exists in `core/urls.py`:
-```python
-path('peer/edit/<int:feedback_id>/', views.edit_peer_feedback, name='edit_peer_feedback'),
-```
-
-#### 4. "CSRF verification failed"
-
-**Solution:** Add to `settings.py`:
-```python
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'http://159.65.240.114',
-]
-```
-
-#### 5. "OpenAI API key not found"
-
-**Solution:** Set environment variable:
-```bash
-export OPENAI_API_KEY=sk-your-key-here
-# On Windows: set OPENAI_API_KEY=sk-your-key-here
-```
-
-Or add to `.env`:
-```
-OPENAI_API_KEY=sk-your-key-here
-```
-
-#### 6. "Database is locked"
-
-**Cause:** SQLite permissions issue on production  
-**Solution:**
-```bash
-sudo chown django:django db.sqlite3
-sudo chown django:django .
-```
-
-#### 7. "Peer feedback not scoring (AI feedback pending...)"
-
-**Cause:** OpenAI API call failed silently  
-**Solution:** Check server logs:
-```bash
-journalctl -u stemscribe -n 50 --no-pager
-```
-
-Ensure `OPENAI_API_KEY` is set on production server.
-
----
-
 ## Contributing
 
 To contribute improvements:
@@ -800,18 +726,12 @@ To contribute improvements:
 4. Test thoroughly: `python manage.py test`
 5. Push to GitHub and create pull request
 
----
 
-## License
-
-MIT License — See LICENSE file for details.
-
----
 
 ## Contact
 
 Built for Imperial College London STEM education.  
-Questions? Open an issue on GitHub or email: manishsharmatimilsina01@gmail.com
+Questions? Open an issue on GitHub or email: m.sharma-timilsina25@imperial.ac.uk
 
 ## Core Features
 
