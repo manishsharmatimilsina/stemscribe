@@ -634,14 +634,14 @@ def _score_peer_feedback(feedback, language='en'):
     lang_name = lang_map.get(language, 'English')
 
     score_prompt = f"""You are evaluating a student's peer review comment on a STEM lab report section.
-Score this feedback on three dimensions (0–100 each) and return ONLY a JSON object in {lang_name}:
+Score this feedback on three dimensions (0–100 each) and return ONLY a JSON object. Write the 'summary' field in {lang_name}:
 
 {{
   "specificity": 0-100,
   "scientific_accuracy": 0-100,
   "constructiveness": 0-100,
   "overall": 0-100,
-  "summary": "One sentence explaining the score."
+  "summary": "One sentence in {lang_name} explaining the score."
 }}
 
 Section being reviewed:
@@ -651,7 +651,9 @@ Question the author asked (if any):
 {feedback.share_request.question or "None"}
 
 Peer's feedback:
-{feedback.feedback_text}"""
+{feedback.feedback_text}
+
+IMPORTANT: Write the summary field in {lang_name}, not English."""
 
     result = call_claude(score_prompt)
     if result and 'overall' in result:
@@ -662,6 +664,7 @@ Peer's feedback:
 
     # Generate AI suggestions to improve the feedback
     improvement_prompt = f"""You are a writing coach helping a student improve their peer feedback on a STEM lab report.
+RESPOND IN {lang_name.upper()}, NOT ENGLISH.
 
 The student reviewed this section:
 "{feedback.share_request.section_text}"
@@ -669,12 +672,14 @@ The student reviewed this section:
 And gave this feedback:
 "{feedback.feedback_text}"
 
-Provide 2-3 specific, actionable suggestions to make this feedback more helpful in {lang_name}. Focus on:
+Provide 2-3 specific, actionable suggestions to make this feedback more helpful. Focus on:
 - Being more specific (quote exact phrases if not already done)
 - Adding scientific context or reasoning
 - Offering concrete revisions
 
-Format as a numbered list (1., 2., 3.) with short, direct suggestions."""
+Format as a numbered list (1., 2., 3.) with short, direct suggestions.
+
+IMPORTANT: Write your entire response in {lang_name}."""
 
     improvement = call_claude(improvement_prompt)
     if improvement and isinstance(improvement, dict) and 'suggestions' in improvement:
