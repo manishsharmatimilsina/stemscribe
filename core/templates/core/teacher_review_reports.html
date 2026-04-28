@@ -1,0 +1,109 @@
+{% extends "core/teacher_base.html" %}
+{% block title %}Review Feedback Reports — StemScribe{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Feedback Reports</div>
+      <div class="page-sub">Review flagged feedback from students</div>
+    </div>
+  </div>
+
+  <div style="max-width:1000px">
+    <!-- Pending Reports -->
+    <div style="margin-bottom:2rem">
+      <div style="font-size:13px;font-weight:600;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)">
+        🚩 Pending Review ({{ pending_reports.count }})
+      </div>
+
+      {% if pending_reports %}
+      {% for report in pending_reports %}
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:1rem;margin-bottom:.75rem">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;margin-bottom:.25rem">
+              Reported by: <strong>{{ report.reported_by.username }}</strong>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:.75rem">
+              {{ report.created_at|date:"j M Y, H:i" }} ·
+              <span style="background:var(--error-light);color:#d62828;padding:2px 8px;border-radius:4px">{{ report.get_reason_display }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Original Feedback Being Reported -->
+        {% if report.peer_feedback %}
+        <div style="background:#f9f8f6;border:1px solid var(--border);border-radius:6px;padding:.9rem;margin-bottom:1rem">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:.35rem">Feedback Being Reported</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6">{{ report.peer_feedback.feedback_text }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:.5rem">
+            From: <strong>{{ report.peer_feedback.reviewer.username }}</strong> on {{ report.peer_feedback.created_at|date:"j M Y" }}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Report Details -->
+        <div style="background:var(--error-light);border:1px solid #ffcccc;border-radius:6px;padding:.9rem;margin-bottom:1rem">
+          <div style="font-size:11px;font-weight:600;color:#d62828;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Report Details</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6">{{ report.description }}</div>
+        </div>
+
+        <!-- Resolution Form -->
+        <form method="post" action="{% url 'resolve_report' report.pk %}">
+          {% csrf_token %}
+          <div style="margin-bottom:1rem">
+            <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.5rem">Action</label>
+            <select name="status" style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg-card)">
+              <option value="reviewed">Mark as Reviewed</option>
+              <option value="resolved">Resolved - Issue Addressed</option>
+              <option value="dismissed">Dismissed - No Action Needed</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:1rem">
+            <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.5rem">Your Response (Optional)</label>
+            <textarea name="response" rows="3" placeholder="Share what action you took or why you dismissed the report..."
+              style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;background:var(--bg-card)"></textarea>
+          </div>
+
+          <div style="display:flex;gap:.65rem">
+            <button type="submit" class="btn btn-primary btn-sm">Submit Resolution</button>
+          </div>
+        </form>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div style="background:var(--accent-light);border:1px solid #c8e09a;border-radius:var(--r);padding:1.25rem;color:var(--accent);font-size:13px">
+        ✓ No pending reports. All feedback is meeting standards.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recently Resolved Reports -->
+    {% if reviewed_reports %}
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)">
+        ✓ Recently Resolved (Last 20)
+      </div>
+
+      {% for report in reviewed_reports %}
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:.75rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+          <div style="font-size:12px;font-weight:600">
+            {{ report.reported_by.username }} reported {{ report.get_reason_display }}
+          </div>
+          <span style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--accent-light);color:var(--accent);font-weight:600">
+            {{ report.get_status_display }}
+          </span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">{{ report.created_at|date:"j M Y" }} · Resolved by {{ report.reviewed_by.username }}</div>
+        {% if report.teacher_response %}
+        <div style="font-size:12px;color:var(--text);margin-top:.5rem;padding:.5rem;background:#f9f8f6;border-radius:4px">{{ report.teacher_response }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

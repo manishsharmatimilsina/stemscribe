@@ -5,9 +5,20 @@ import json
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [('student', 'Student'), ('teacher', 'Teacher')]
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('es', 'Spanish'),
+        ('fr', 'French'),
+        ('de', 'German'),
+        ('zh', 'Chinese'),
+        ('ja', 'Japanese'),
+        ('pt', 'Portuguese'),
+        ('ar', 'Arabic'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     class_name = models.CharField(max_length=100, blank=True, default='BIOL 201')
+    preferred_language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
@@ -162,3 +173,36 @@ class TeacherComment(models.Model):
 
     def __str__(self):
         return f"{self.teacher.username} on {self.document.title}"
+
+
+class FeedbackReport(models.Model):
+    REASON_CHOICES = [
+        ('offensive', 'Offensive or inappropriate'),
+        ('inaccurate', 'Factually incorrect'),
+        ('irrelevant', 'Irrelevant or unhelpful'),
+        ('integrity', 'Academic integrity violation'),
+        ('unclear', 'Unclear or confusing'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending review'),
+        ('reviewed', 'Reviewed by teacher'),
+        ('resolved', 'Resolved'),
+        ('dismissed', 'Dismissed'),
+    ]
+
+    peer_feedback = models.ForeignKey(PeerFeedback, on_delete=models.CASCADE, related_name='reports', null=True, blank=True)
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedback_reports')
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    teacher_response = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports_reviewed')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Report from {self.reported_by.username} - {self.get_reason_display()}"
+
+    class Meta:
+        ordering = ['-created_at']

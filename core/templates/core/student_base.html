@@ -52,20 +52,9 @@
 </div>
 
 <div class="sb-section">
-  <div class="sb-section-label">✨ Upcoming Features</div>
-  <div style="padding:.75rem;font-size:12px;color:#666;line-height:1.5">
-    <div style="margin-bottom:.6rem">
-      <div style="color:#0173B2;font-weight:600;margin-bottom:.2rem">🌍 Multilingual Feedback</div>
-      <div style="font-size:11px;color:#555">Get AI feedback in your preferred language</div>
-    </div>
-    <div style="margin-bottom:.6rem">
-      <div style="color:#d62828;font-weight:600;margin-bottom:.2rem">🚩 Report Problematic Feedback</div>
-      <div style="font-size:11px;color:#555">Flag AI or peer feedback that doesn't meet standards</div>
-    </div>
-    <div>
-      <div style="color:#DE8F05;font-weight:600;margin-bottom:.2rem">👁️ Colorblind Friendly Design</div>
-      <div style="font-size:11px;color:#555">Updated colors for accessibility</div>
-    </div>
-  </div>
+  <div class="sb-section-label">Settings</div>
+  <a href="{% url 'user_settings' %}" class="sb-item {% if page == 'settings' %}active{% endif %}">
+    <span class="sb-icon">⚙</span> Preferences
+  </a>
 </div>
 {% endblock %}

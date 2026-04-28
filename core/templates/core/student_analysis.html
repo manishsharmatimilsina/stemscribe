@@ -30,16 +30,6 @@
     </div>
   </div>
 
-  <!-- Feature indicators -->
-  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center">
-    <span class="feature-badge feature-flag" title="Future feature: Flag problematic feedback from AI or peers">
-      <span class="feature-icon">🚩</span> Report Feedback Issues
-    </span>
-    <span class="feature-badge feature-multilingual" title="Future feature: Request AI feedback in your language">
-      <span class="feature-icon">🌍</span> Multilingual Feedback Coming
-    </span>
-  </div>
-
   <div class="analysis-layout">
 
     <!-- REPORT WITH HIGHLIGHTS -->
@@ -133,19 +123,24 @@
               {% if fb.scored %}
               <span style="font-size:11px;color:var(--accent-mid);font-weight:600">Score: {{ fb.ai_contribution_score }}/100</span>
               {% endif %}
-              <form method="post" action="{% url 'delete_peer_feedback' fb.pk %}" style="display:inline">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{% url 'student_analysis' doc.pk %}">
-                <button type="submit" onclick="return confirm('Delete this feedback?')"
-                  style="background:none;border:none;cursor:pointer;font-size:13px;color:#999;padding:0 2px" title="Delete">✕</button>
-              </form>
             </div>
           </div>
           {% if fb.share_request.question %}
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:.35rem;font-style:italic">Q: {{ fb.share_request.question }}</div>
           {% endif %}
           <div style="font-size:13px;line-height:1.6;color:var(--text)">{{ fb.feedback_text }}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:.4rem">{{ fb.created_at|date:"j M Y, H:i" }}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y, H:i" }}</div>
+            <div style="display:flex;gap:.75rem">
+              <button onclick="openFlagModal({{ fb.pk }})" style="font-size:11px;color:#d62828;cursor:pointer;background:none;border:none;text-decoration:underline">🚩 Report</button>
+              <form method="post" action="{% url 'delete_peer_feedback' fb.pk %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'student_analysis' doc.pk %}">
+                <button type="submit" onclick="return confirm('Delete this feedback?')"
+                  style="background:none;border:none;cursor:pointer;font-size:13px;color:#999;text-decoration:underline;padding:0" title="Delete">Remove</button>
+              </form>
+            </div>
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -262,5 +257,74 @@ function toggleEdit(){
   edit.style.display = isEditing ? 'none' : '';
   btn.textContent   = isEditing ? '✎ Edit & revise' : '✕ Close editor';
 }
+
+function openFlagModal(feedbackId) {
+  document.getElementById('flagFeedbackId').value = feedbackId;
+  document.getElementById('flagModal').classList.add('open');
+}
+
+function closeFlagModal() {
+  document.getElementById('flagModal').classList.remove('open');
+  document.getElementById('flagForm').reset();
+}
 </script>
 {% endblock %}
+
+<!-- Flag Feedback Modal -->
+<div class="modal-overlay" id="flagModal">
+  <div class="modal">
+    <h3>Report Problematic Feedback</h3>
+    <form id="flagForm" style="margin-top:1rem">
+      {% csrf_token %}
+      <input type="hidden" id="flagFeedbackId" name="feedback_id">
+
+      <div class="field">
+        <label>Reason for Report</label>
+        <select name="reason" required style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg-card)">
+          <option value="">Select a reason...</option>
+          <option value="offensive">Offensive or inappropriate</option>
+          <option value="inaccurate">Factually incorrect</option>
+          <option value="irrelevant">Irrelevant or unhelpful</option>
+          <option value="integrity">Academic integrity violation</option>
+          <option value="unclear">Unclear or confusing</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Details (required)</label>
+        <textarea name="description" required rows="4" placeholder="Explain why this feedback is problematic..."
+          style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;background:var(--bg-card)"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" onclick="closeFlagModal()" style="padding:.55rem 1.4rem;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Submit Report</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('flagForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const feedbackId = document.getElementById('flagFeedbackId').value;
+  const formData = new FormData(document.getElementById('flagForm'));
+
+  try {
+    const response = await fetch(`/feedback/${feedbackId}/flag/`, {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+    if (response.ok) {
+      showToast('✓ Report submitted. Thank you for helping maintain feedback quality.');
+      closeFlagModal();
+    } else {
+      showToast('Error: ' + (result.error || 'Failed to submit report'));
+    }
+  } catch (err) {
+    showToast('Error submitting report');
+  }
+});
+</script>

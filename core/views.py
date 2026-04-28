@@ -2,6 +2,7 @@ import json
 import logging
 import urllib.request
 import urllib.error
+import django.utils.timezone
 from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit, PeerShareRequest, PeerFeedback, TeacherComment
+from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit, PeerShareRequest, PeerFeedback, TeacherComment, FeedbackReport
 
 # ──────────────────────────────────────────
 # DEMO DATA
@@ -618,10 +619,22 @@ def _teacher_context(request):
 # PEER REVIEW SYSTEM
 # ──────────────────────────────────────────
 
-def _score_peer_feedback(feedback):
+def _score_peer_feedback(feedback, language='en'):
     """Call OpenAI to score a peer's feedback contribution and suggest improvements."""
+    lang_map = {
+        'en': 'English',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'zh': 'Chinese',
+        'ja': 'Japanese',
+        'pt': 'Portuguese',
+        'ar': 'Arabic',
+    }
+    lang_name = lang_map.get(language, 'English')
+
     score_prompt = f"""You are evaluating a student's peer review comment on a STEM lab report section.
-Score this feedback on three dimensions (0–100 each) and return ONLY a JSON object:
+Score this feedback on three dimensions (0–100 each) and return ONLY a JSON object in {lang_name}:
 
 {{
   "specificity": 0-100,
@@ -656,7 +669,7 @@ The student reviewed this section:
 And gave this feedback:
 "{feedback.feedback_text}"
 
-Provide 2-3 specific, actionable suggestions to make this feedback more helpful. Focus on:
+Provide 2-3 specific, actionable suggestions to make this feedback more helpful in {lang_name}. Focus on:
 - Being more specific (quote exact phrases if not already done)
 - Adding scientific context or reasoning
 - Offering concrete revisions
@@ -748,14 +761,14 @@ def peer_review(request, share_id):
                     feedback_text=feedback_text,
                     is_submitted=False,
                 )
-                _score_peer_feedback(my_feedback)
+                _score_peer_feedback(my_feedback, request.user.profile.preferred_language)
             else:
                 # Update existing draft
                 my_feedback.feedback_text = feedback_text
                 my_feedback.scored = False
                 my_feedback.ai_feedback_generated = False
                 my_feedback.save()
-                _score_peer_feedback(my_feedback)
+                _score_peer_feedback(my_feedback, request.user.profile.preferred_language)
 
             # If submitting, mark as submitted
             if action == 'submit':
@@ -824,7 +837,7 @@ def edit_peer_feedback(request, feedback_id):
             fb.ai_feedback_generated = False
             fb.save()
             # Re-score the updated feedback
-            _score_peer_feedback(fb)
+            _score_peer_feedback(fb, request.user.profile.preferred_language)
             return redirect('peer_activity')
 
     ctx = _student_context(request)
@@ -1029,3 +1042,71 @@ def teacher_class_feedback(request):
     ctx = _teacher_context(request)
     ctx['page'] = 'feedback'
     return render(request, 'core/teacher_feedback.html', ctx)
+
+# ──────────────────────────────────────────
+# USER SETTINGS & PREFERENCES
+# ──────────────────────────────────────────
+@login_required
+def user_settings(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        language = request.POST.get('language', 'en')
+        profile.preferred_language = language
+        profile.save()
+        return redirect('user_settings')
+    ctx = {
+        'page': 'settings',
+        'profile': profile,
+        'languages': UserProfile.LANGUAGE_CHOICES,
+    }
+    return render(request, 'core/user_settings.html', ctx)
+
+# ──────────────────────────────────────────
+# FEEDBACK REPORTING
+# ──────────────────────────────────────────
+@login_required
+@require_POST
+def flag_feedback(request, feedback_id):
+    feedback = get_object_or_404(PeerFeedback, pk=feedback_id)
+    reason = request.POST.get('reason', 'other')
+    description = request.POST.get('description', '').strip()
+
+    if not description:
+        return JsonResponse({'error': 'Please provide a description'}, status=400)
+
+    FeedbackReport.objects.create(
+        peer_feedback=feedback,
+        reported_by=request.user,
+        reason=reason,
+        description=description
+    )
+    return JsonResponse({'success': 'Feedback reported successfully'})
+
+@login_required
+def teacher_review_reports(request):
+    if request.user.profile.role != 'teacher':
+        return redirect('student_submit')
+
+    ctx = _teacher_context(request)
+    ctx['page'] = 'reports'
+    ctx['pending_reports'] = FeedbackReport.objects.filter(status='pending').order_by('-created_at')
+    ctx['reviewed_reports'] = FeedbackReport.objects.filter(status__in=['reviewed', 'resolved', 'dismissed']).order_by('-created_at')[:20]
+    return render(request, 'core/teacher_review_reports.html', ctx)
+
+@login_required
+@require_POST
+def resolve_report(request, report_id):
+    if request.user.profile.role != 'teacher':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    report = get_object_or_404(FeedbackReport, pk=report_id)
+    status = request.POST.get('status', 'reviewed')
+    response = request.POST.get('response', '').strip()
+
+    report.status = status
+    report.teacher_response = response
+    report.reviewed_by = request.user
+    report.reviewed_at = django.utils.timezone.now()
+    report.save()
+
+    return JsonResponse({'success': 'Report resolved'})

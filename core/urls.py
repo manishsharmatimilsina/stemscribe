@@ -41,6 +41,14 @@ urlpatterns = [
     path('teacher/comment/<int:doc_id>/', views.add_teacher_comment, name='add_teacher_comment'),
     path('teacher/comment/delete/<int:comment_id>/', views.delete_teacher_comment, name='delete_teacher_comment'),
     path('teacher/peer-overview/', views.teacher_peer_overview, name='teacher_peer_overview'),
+    path('teacher/reports/', views.teacher_review_reports, name='teacher_review_reports'),
+    path('teacher/report/<int:report_id>/resolve/', views.resolve_report, name='resolve_report'),
+
+    # User settings & preferences
+    path('settings/', views.user_settings, name='user_settings'),
+
+    # Feedback reporting
+    path('feedback/<int:feedback_id>/flag/', views.flag_feedback, name='flag_feedback'),
 
     # Revision + download
     path('student/revise/<int:doc_id>/', views.save_revision, name='save_revision'),
