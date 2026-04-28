@@ -1,4 +1,5 @@
 from django.utils import translation
+from django.conf import settings
 from core.translations import get_translations_for_language
 
 def language_processor(request):
@@ -6,7 +7,7 @@ def language_processor(request):
     if request.user.is_authenticated:
         lang = request.user.profile.preferred_language
         translation.activate(lang)
-        request.session[translation.LANGUAGE_SESSION_KEY] = lang
+        request.session[settings.LANGUAGE_SESSION_KEY] = lang
     else:
         lang = translation.get_language()
 
