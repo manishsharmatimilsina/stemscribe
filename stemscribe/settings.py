@@ -34,6 +34,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -54,6 +55,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
+                'core.context_processors.language_processor',
             ],
         },
     },
@@ -79,6 +82,27 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # OpenAI API Key - set via environment variable
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+# Internationalization (i18n)
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+LANGUAGES = [
+    ('en', 'English'),
+    ('es', 'Spanish'),
+    ('fr', 'French'),
+    ('de', 'German'),
+    ('zh', 'Chinese'),
+    ('ja', 'Japanese'),
+    ('pt', 'Portuguese'),
+    ('ar', 'Arabic'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/student/submit/'

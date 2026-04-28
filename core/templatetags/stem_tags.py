@@ -1,5 +1,6 @@
 from django import template
 import re
+from core.translations import get_text
 
 register = template.Library()
 
@@ -48,3 +49,8 @@ def highlight_report(content, issues_json):
             para_html = para.replace('\n', '<br>')
             result.append(f'<p style="margin-bottom:.75rem;line-height:1.85">{para_html}</p>')
     return '\n'.join(result)
+
+@register.filter
+def tr(key, language='en'):
+    """Translate a key to the specified language."""
+    return get_text(key, language)
