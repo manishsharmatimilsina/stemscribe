@@ -358,6 +358,20 @@ def api_analyse(request):
     version = get_object_or_404(DocumentVersion, pk=version_id)
     doc = version.document
 
+    # Get user's preferred language
+    lang = request.user.profile.preferred_language if request.user.is_authenticated else 'en'
+    lang_map = {
+        'en': 'English',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'zh': 'Chinese',
+        'ja': 'Japanese',
+        'pt': 'Portuguese',
+        'ar': 'Arabic',
+    }
+    lang_name = lang_map.get(lang, 'English')
+
     prompt = f"""You are an AI tutor evaluating a STEM lab report. Analyse this report and return ONLY a JSON object (no markdown, no preamble) with this exact structure:
 {{
   "scores": {{
@@ -370,12 +384,13 @@ def api_analyse(request):
       "type": "understanding|analysis|communication",
       "category": "Scientific accuracy|Conceptual depth|Use of terminology|Scientific reasoning|Data interpretation|Use of evidence|Critical evaluation|Clarity and precision|Structure and organisation|Academic tone|Grammar and technical accuracy",
       "quote": "exact problematic phrase from the report (max 20 words)",
-      "issue": "Brief issue label",
-      "suggestion": "Improved version (max 35 words)"
+      "issue": "Brief issue label in {lang_name}",
+      "suggestion": "Improved version in {lang_name} (max 35 words)"
     }}
   ]
 }}
 Provide 4-6 issues. Be specific. Quote EXACT phrases verbatim from the report.
+IMPORTANT: Write all "issue" and "suggestion" fields in {lang_name}, not English.
 
 REPORT:
 {version.content}"""
