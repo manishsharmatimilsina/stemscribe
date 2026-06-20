@@ -1,0 +1,471 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Learning Analytics — StemScribe Admin{% endblock %}
+
+{% block content %}
+<style>
+  .analytics-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .analytics-header {
+    margin-bottom: 30px;
+  }
+
+  .analytics-header h1 {
+    font-size: 28px;
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+
+  .analytics-header p {
+    color: #666;
+    margin: 0;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .metric-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .metric-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin: 10px 0;
+  }
+
+  .metric-subtitle {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+  }
+
+  .section {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #417690;
+    color: #333;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+
+  .stat-label {
+    color: #666;
+    font-weight: 500;
+  }
+
+  .stat-value {
+    color: #333;
+    font-weight: 600;
+  }
+
+  .stat-badge {
+    display: inline-block;
+    background: #417690;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .stat-badge.success {
+    background: #28a745;
+  }
+
+  .stat-badge.warning {
+    background: #ffc107;
+    color: #333;
+  }
+
+  .stat-badge.info {
+    background: #17a2b8;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #417690, #5a9cc7);
+    border-radius: 4px;
+  }
+
+  .engagement-level {
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 12px;
+  }
+
+  .engagement-level.high {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .engagement-level.medium {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .engagement-level.low {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="analytics-container">
+  <div class="analytics-header">
+    <div>
+      <h1>📊 Learning Analytics</h1>
+      <p>Overview of student engagement, document uploads, and peer review activity</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="{% url 'admin:student_analytics' %}" style="padding: 8px 16px; background: #417690; color: white; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">Student Details →</a>
+      <a href="{% url 'admin:teacher_analytics' %}" style="padding: 8px 16px; background: #417690; color: white; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">Teacher Details →</a>
+    </div>
+  </div>
+
+  <!-- User Statistics -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <h3>👥 Total Students</h3>
+      <div class="metric-value">{{ total_students }}</div>
+      <div class="metric-subtitle">Registered students</div>
+    </div>
+
+    <div class="metric-card">
+      <h3>👨‍🏫 Total Teachers</h3>
+      <div class="metric-value">{{ total_teachers }}</div>
+      <div class="metric-subtitle">Registered teachers</div>
+    </div>
+
+    <div class="metric-card">
+      <h3>📄 Students with Documents</h3>
+      <div class="metric-value">{{ students_with_docs }}</div>
+      <div class="metric-subtitle">
+        {{ students_without_docs }} students without documents
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <h3>⚡ Active Students</h3>
+      <div class="metric-value">{{ active_students }}</div>
+      <div class="metric-subtitle">
+        With documents or peer activity
+      </div>
+    </div>
+  </div>
+
+  <!-- Engagement Metrics Section -->
+  <div class="section">
+    <div class="section-title">📈 Engagement Overview</div>
+
+    <div class="stat-row">
+      <span class="stat-label">Student Registration Rate</span>
+      <span class="stat-value">
+        {% if total_students > 0 %}
+          {{ students_with_docs|add:0 }}/{{ total_students }}
+        {% else %}
+          0/0
+        {% endif %}
+        <span class="stat-badge">
+          {% if total_students > 0 %}
+            {{ percent_active|default:"0" }}%
+          {% else %}
+            N/A
+          {% endif %}
+        </span>
+      </span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">Active Engagement Rate</span>
+      <span class="stat-value">
+        {% if total_students > 0 %}
+          {{ active_students }}/{{ total_students }}
+          <span class="stat-badge success">
+            {% widthratio active_students total_students 100 %}%
+          </span>
+        {% else %}
+          N/A
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">Total Documents Uploaded</span>
+      <span class="stat-value">{{ total_uploads }}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">Avg Documents per Student</span>
+      <span class="stat-value">{{ avg_docs_per_student }}</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Document Statistics -->
+    <div class="section">
+      <div class="section-title">📚 Document Activity</div>
+
+      <div class="stat-row">
+        <span class="stat-label">Total Documents Created</span>
+        <span class="stat-value">{{ total_documents }}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Document Versions (Uploads)</span>
+        <span class="stat-value">{{ total_uploads }}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Students with Documents</span>
+        <span class="stat-value">
+          {{ students_with_docs }}
+          {% if total_students > 0 %}
+            <span class="stat-badge info">
+              {% widthratio students_with_docs total_students 100 %}%
+            </span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Students Without Documents</span>
+        <span class="stat-value">
+          {{ students_without_docs }}
+          {% if total_students > 0 %}
+            <span class="stat-badge warning">
+              {% widthratio students_without_docs total_students 100 %}%
+            </span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- Peer Review Activity -->
+    <div class="section">
+      <div class="section-title">👥 Peer Review Activity</div>
+
+      <div class="stat-row">
+        <span class="stat-label">Share Requests</span>
+        <span class="stat-value">{{ total_share_requests }}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Total Feedback Given</span>
+        <span class="stat-value">{{ total_peer_reviews }}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Submitted Reviews</span>
+        <span class="stat-value">
+          {{ submitted_reviews }}
+          {% if total_peer_reviews > 0 %}
+            <span class="stat-badge success">
+              {% widthratio submitted_reviews total_peer_reviews 100 %}%
+            </span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Reviews with AI Scores</span>
+        <span class="stat-value">{{ peer_feedbacks_with_scores }}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Avg Contribution Score</span>
+        <span class="stat-value">
+          {{ avg_contribution_score }}/100
+          {% if avg_contribution_score >= 70 %}
+            <span class="engagement-level high">High</span>
+          {% elif avg_contribution_score >= 50 %}
+            <span class="engagement-level medium">Medium</span>
+          {% else %}
+            <span class="engagement-level low">Low</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Rubric & Teacher Activity -->
+    <div class="section">
+      <div class="section-title">👨‍🏫 Teacher Activity</div>
+
+      <div class="stat-row">
+        <span class="stat-label">Teachers Registered</span>
+        <span class="stat-value">{{ total_teachers }}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Teachers with Custom Rubrics</span>
+        <span class="stat-value">
+          {{ teachers_with_rubrics }}
+          {% if total_teachers > 0 %}
+            <span class="stat-badge info">
+              {% widthratio teachers_with_rubrics total_teachers 100 %}%
+            </span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Teachers with Comments</span>
+        <span class="stat-value">
+          {{ teachers_with_comments }}
+          {% if total_teachers > 0 %}
+            <span class="stat-badge info">
+              {% widthratio teachers_with_comments total_teachers 100 %}%
+            </span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Total Rubric Criteria</span>
+        <span class="stat-value">{{ total_rubric_criteria }}</span>
+      </div>
+    </div>
+
+    <!-- AI Scoring Statistics -->
+    <div class="section">
+      <div class="section-title">🤖 AI Analysis Metrics</div>
+
+      <div class="stat-row">
+        <span class="stat-label">Avg Understanding Score</span>
+        <span class="stat-value">{{ avg_understanding }}/100</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Avg Analysis Score</span>
+        <span class="stat-value">{{ avg_analysis }}/100</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Avg Communication Score</span>
+        <span class="stat-value">{{ avg_communication }}/100</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Overall Average</span>
+        <span class="stat-value">
+          {% with overall=avg_understanding|add:avg_analysis|add:avg_communication %}
+            {% widthratio overall 3 1 %}/100
+          {% endwith %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="section">
+    <div class="section-title">📊 Summary</div>
+
+    <div class="stat-row">
+      <span class="stat-label">Total Users</span>
+      <span class="stat-value">{{ total_students|add:total_teachers }}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">Documents in System</span>
+      <span class="stat-value">{{ total_documents }}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">Peer Review Requests</span>
+      <span class="stat-value">{{ total_share_requests }}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">Total Feedback Items</span>
+      <span class="stat-value">{{ total_peer_reviews }}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">System Health</span>
+      <span class="stat-value">
+        {% if total_students > 0 and students_with_docs > 0 and total_peer_reviews > 0 %}
+          <span class="engagement-level high">Healthy</span>
+        {% elif total_students > 0 and students_with_docs > 0 %}
+          <span class="engagement-level medium">Fair</span>
+        {% else %}
+          <span class="engagement-level low">Needs Improvement</span>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center; color: #666;">
+    <p style="margin: 0; font-size: 12px;">
+      Last updated: {{ now|date:"Y-m-d H:i:s" }}
+      <br>
+      <a href="{% url 'admin:index' %}" style="color: #417690; text-decoration: none;">← Back to Admin</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

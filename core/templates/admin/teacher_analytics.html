@@ -1,0 +1,253 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Teacher Analytics — StemScribe Admin{% endblock %}
+
+{% block content %}
+<style>
+  .analytics-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .analytics-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .analytics-header h1 {
+    font-size: 28px;
+    margin: 0;
+    color: #333;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 30px;
+  }
+
+  .header-stat {
+    text-align: right;
+  }
+
+  .header-stat .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #417690;
+  }
+
+  .header-stat .label {
+    font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #417690;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .teachers-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .teachers-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #ddd;
+  }
+
+  .teachers-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .teachers-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+  }
+
+  .teachers-table tbody tr:hover {
+    background: #f8f9fa;
+  }
+
+  .teacher-name {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .status-active {
+    display: inline-block;
+    background: #d4edda;
+    color: #155724;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-inactive {
+    display: inline-block;
+    background: #f8d7da;
+    color: #721c24;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .metric-number {
+    font-weight: 600;
+    color: #417690;
+  }
+
+  .pagination {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+  }
+
+  .activity-level {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .activity-high {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .activity-medium {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .activity-low {
+    background: #f8d7da;
+    color: #721c24;
+  }
+</style>
+
+<div class="analytics-container">
+  <a href="{% url 'admin:analytics' %}" class="back-link">← Back to Overview</a>
+
+  <div class="analytics-header">
+    <div>
+      <h1>👨‍🏫 Teacher Analytics</h1>
+      <p style="color: #999; margin: 5px 0 0 0;">Teacher activity and engagement metrics</p>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="value">{{ total_teachers }}</div>
+        <div class="label">Total Teachers</div>
+      </div>
+      <div class="header-stat">
+        <div class="value">{{ active_teachers }}</div>
+        <div class="label">Active</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="teachers-table">
+    <thead>
+      <tr>
+        <th>Teacher Name</th>
+        <th>Status</th>
+        <th>Custom Rubric Criteria</th>
+        <th>Student Comments</th>
+        <th>Activity Level</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stat in teacher_stats %}
+      <tr>
+        <td class="teacher-name">{{ stat.teacher.get_full_name|default:stat.teacher.username }}</td>
+        <td>
+          {% if stat.is_active %}
+            <span class="status-active">Active</span>
+          {% else %}
+            <span class="status-inactive">Inactive</span>
+          {% endif %}
+        </td>
+        <td><span class="metric-number">{{ stat.rubric_criteria_count }}</span></td>
+        <td><span class="metric-number">{{ stat.comment_count }}</span></td>
+        <td>
+          {% with total=stat.rubric_criteria_count|add:stat.comment_count %}
+            {% if total > 10 %}
+              <span class="activity-level activity-high">High</span>
+            {% elif total > 0 %}
+              <span class="activity-level activity-medium">Medium</span>
+            {% else %}
+              <span class="activity-level activity-low">Low</span>
+            {% endif %}
+          {% endwith %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 30px; color: #999;">
+          No teachers registered yet.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="pagination">
+    Showing {{ teacher_stats|length }} of {{ total_teachers }} teachers
+    <br>
+    Last updated: {{ now|date:"Y-m-d H:i:s" }}
+  </div>
+
+  <!-- Activity breakdown -->
+  <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <h3 style="margin-top: 0;">📊 Activity Summary</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+      <div>
+        <div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Rubric Criteria Created</div>
+        <div style="font-size: 24px; font-weight: 700; color: #417690;">
+          {% with total_criteria=teacher_stats|dictsort:"rubric_criteria_count" %}
+            {{ teacher_stats|length|default:"0" }}
+          {% endwith %}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Comments on Students</div>
+        <div style="font-size: 24px; font-weight: 700; color: #417690;">
+          {{ teacher_stats|length|default:"0" }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Teachers with Custom Setup</div>
+        <div style="font-size: 24px; font-weight: 700; color: #417690;">
+          {{ active_teachers }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

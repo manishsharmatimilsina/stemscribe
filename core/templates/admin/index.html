@@ -1,0 +1,18 @@
+{% extends "admin/index.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block content %}
+<div id="content-main">
+  {% if analytics_link %}
+  <div style="background: linear-gradient(135deg, #417690 0%, #5a9cc7 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="margin-top: 0; margin-bottom: 10px;">📊 Learning Analytics</h2>
+    <p style="margin: 0 0 15px 0;">View comprehensive statistics about student engagement, document uploads, and peer review activity.</p>
+    <a href="{% url 'admin:analytics' %}" style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: 500; border: 1px solid rgba(255,255,255,0.3);">
+      Go to Analytics Dashboard →
+    </a>
+  </div>
+  {% endif %}
+
+  {{ block.super }}
+</div>
+{% endblock %}
