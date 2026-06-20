@@ -121,17 +121,9 @@ class PeerEdit(models.Model):
 
 
 class PeerShareRequest(models.Model):
-    SECTION_CHOICES = [
-        ('introduction', 'Introduction'),
-        ('method', 'Method'),
-        ('results', 'Results'),
-        ('discussion', 'Discussion'),
-        ('conclusion', 'Conclusion'),
-        ('custom', 'Custom section'),
-    ]
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='share_requests')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shares_created')
-    section_label = models.CharField(max_length=50, choices=SECTION_CHOICES, default='custom')
+    section_label = models.CharField(max_length=200, blank=True, default='')  # Optional label for the shared text
     section_text = models.TextField()
     question = models.TextField(blank=True)
     shared_with = models.ManyToManyField(User, blank=True, related_name='received_shares')  # empty = all students
@@ -139,7 +131,8 @@ class PeerShareRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.created_by.username} — {self.get_section_label_display()}"
+        label = self.section_label if self.section_label else 'Shared excerpt'
+        return f"{self.created_by.username} — {label}"
 
     def feedback_count(self):
         return self.feedbacks.count()

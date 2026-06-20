@@ -372,7 +372,7 @@ def api_analyse(request):
     }
     lang_name = lang_map.get(lang, 'English')
 
-    prompt = f"""You are an AI tutor evaluating a STEM lab report. Analyse this report and return ONLY a JSON object (no markdown, no preamble) with this exact structure:
+    prompt = f"""You are an AI tutor evaluating a STEM document. Analyse this document and return ONLY a JSON object (no markdown, no preamble) with this exact structure:
 {{
   "scores": {{
     "understanding": {{"scientific_accuracy": 0-100, "conceptual_depth": 0-100, "terminology": 0-100}},
@@ -383,16 +383,16 @@ def api_analyse(request):
     {{
       "type": "understanding|analysis|communication",
       "category": "Scientific accuracy|Conceptual depth|Use of terminology|Scientific reasoning|Data interpretation|Use of evidence|Critical evaluation|Clarity and precision|Structure and organisation|Academic tone|Grammar and technical accuracy",
-      "quote": "exact problematic phrase from the report (max 20 words)",
+      "quote": "exact problematic phrase from the document (max 20 words)",
       "issue": "Brief issue label in {lang_name}",
       "suggestion": "Improved version in {lang_name} (max 35 words)"
     }}
   ]
 }}
-Provide 4-6 issues. Be specific. Quote EXACT phrases verbatim from the report.
+Provide 4-6 issues. Be specific. Quote EXACT phrases verbatim from the document.
 IMPORTANT: Write all "issue" and "suggestion" fields in {lang_name}, not English.
 
-REPORT:
+DOCUMENT:
 {version.content}"""
 
     result = call_claude(prompt)
@@ -710,7 +710,7 @@ def share_section(request, doc_id):
     doc = get_object_or_404(Document, pk=doc_id, owner=request.user)
     all_students = User.objects.filter(profile__role='student').exclude(pk=request.user.pk)
     if request.method == 'POST':
-        section_label = request.POST.get('section_label', 'custom')
+        section_label = request.POST.get('section_label', '').strip()
         section_text = request.POST.get('section_text', '').strip()
         question = request.POST.get('question', '').strip()
         selected_ids = request.POST.getlist('shared_with')
@@ -731,7 +731,6 @@ def share_section(request, doc_id):
         'page': 'share',
         'doc': doc,
         'latest_content': latest.content if latest else '',
-        'section_choices': PeerShareRequest.SECTION_CHOICES,
         'all_students': all_students,
     })
     return render(request, 'core/student_share.html', ctx)
