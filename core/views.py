@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .models import UserProfile, Document, DocumentVersion, RubricCriterion, PeerEdit, PeerShareRequest, PeerFeedback, TeacherComment, FeedbackReport
+from .document_handler import extract_text_from_file
 
 # ──────────────────────────────────────────
 # DEMO DATA
@@ -324,7 +325,16 @@ def student_analyse(request):
     if not content:
         uploaded = request.FILES.get('report_file')
         if uploaded:
-            content = uploaded.read().decode('utf-8', errors='ignore')
+            try:
+                content = extract_text_from_file(uploaded)
+            except ValueError as e:
+                return render(request, 'core/student_submit.html', {
+                    'error': str(e),
+                    'documents': Document.objects.filter(owner=request.user).order_by('-updated_at'),
+                    'peer_edit_count': PeerEdit.objects.filter(editor=request.user).count(),
+                    'user': request.user,
+                    'page': 'submit'
+                })
 
     if not content:
         return redirect('student_submit')
