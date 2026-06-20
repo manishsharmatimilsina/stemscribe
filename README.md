@@ -1,328 +1,99 @@
-# StemScribe — AI-Guided STEM Writing Platform
+# StemScribe: AI-Guided Collaboration for STEM Writing
 
-An intelligent Django-based collaborative learning platform for STEM education. Students submit lab reports, receive AI-powered feedback, participate in structured peer review, and collaborate with classmates through a quality-assured feedback system. Teachers monitor class progress, provide oversight on peer contributions, and guide skill development through custom rubrics.
-
-**Key Differentiator:** The peer review system uses AI quality assurance—peers submit feedback drafts, AI scores them on Specificity/Constructiveness/Scientific Accuracy, and peers can revise their feedback based on AI suggestions before it reaches the student.
+**Structured edits, real impact.**
 
 ---
 
-## Table of Contents
+## Project Overview & Team
 
-1. [Installation](#installation)
-2. [Configuration](#configuration)
-3. [Quick Start](#quick-start)
-4. [Features & Workflows](#features--workflows)
-5. [Database Schema](#database-schema)
-6. [API Endpoints](#api-endpoints)
-7. [Deployment](#deployment)
-8. [Development](#development)
-9. [Troubleshooting](#troubleshooting)
+**StemScribe** is an AI-powered peer feedback system designed to transform how feedback works in STEM education. Built as a full-stack web platform, it enables students to receive structured, actionable feedback while maintaining human oversight over AI recommendations.
+
+### Team Members
+
+| Name | Year/Level | Role | Contribution |
+|------|-----------|------|--------------|
+| **Aimma Shahzad** | 4th Year, Medicine | Co-Founder | Product design, user research, feedback workflows |
+| **Akshara Suresh** | 2nd Year, Medicine | Co-Founder | Peer review system, platform testing |
+| **Manish Sharma Timilsina** | Postgraduate, Chemical Engineering | Technical Lead | Full-stack development, API integration, deployment |
 
 ---
 
-## Installation
+## Grand Challenge Addressed
 
-### System Requirements
+**AI-Powered Peer Feedback Coach for STEM Outputs**
 
-- **Python:** 3.8+
-- **Database:** SQLite (included) or PostgreSQL for production
-- **OS:** macOS, Linux, Windows (with WSL recommended)
+StemScribe tackles the critical gap in STEM education: students receive feedback that is unstructured, inconsistent, and difficult to apply—leading to superficial improvements and passive learning. Simultaneously, emerging AI tools risk over-automation, where students blindly accept suggestions without understanding them.
 
-### Step 1: Clone Repository
+StemScribe solves this by combining AI-driven structure with human control, ensuring feedback is actionable, trustworthy, and educational.
 
-```bash
-git clone https://github.com/manishsharmatimilsina/stemscribe.git
-cd stemscribe/stemscribe
+---
+
+## Problem Statement & Solution Overview
+
+### The Problem
+
+Feedback is essential for learning, but in STEM education it often breaks down in practice:
+
+- **Unstructured:** Feedback lacks clear direction or alignment with learning objectives
+- **Inconsistent:** Quality varies across peers and instructors
+- **Hard to apply:** Students don't know how to translate feedback into concrete revisions
+- **Over-automated:** AI tools encourage passive acceptance without genuine understanding
+
+### The Solution: StemScribe
+
+StemScribe is a human–AI collaborative platform that transforms feedback through four key mechanisms:
+
+1. **Structured Feedback** – AI organizes feedback into clear, rubric-aligned categories (clarity, scientific accuracy, reasoning)
+2. **Quality Assurance** – AI evaluates peer feedback for specificity, constructiveness, and correctness before delivery
+3. **Human-in-the-Loop** – Students actively review, interpret, and decide how to apply feedback, preventing over-reliance on AI
+4. **Learning Tracking** – Version control allows students and educators to see how work evolves, visualizing genuine learning progress
+
+---
+
+## Technology Stack & Architecture
+
+### Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| **Frontend** | HTML, CSS, JavaScript |
+| **Backend** | Python with Django |
+| **Database** | SQLite (dev) / PostgreSQL (production) |
+| **AI Engine** | OpenAI API (Claude) |
+| **Deployment** | Gunicorn, Nginx, Linux/Ubuntu |
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Users: Students | Peers | Teachers                         │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  Frontend Layer                                              │
+│  • Submission Interface   • Feedback Review   • Dashboards   │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  Django Backend                                              │
+│  • Authentication   • Workflow Management   • Feedback Routing │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  Database Layer                                              │
+│  • Documents   • Feedback   • Versions   • Rubrics           │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  AI Layer                                                    │
+│  • Writing Analysis   • Peer Feedback QA   • Suggestions     │
+│  OpenAI API: Claude                                          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Step 2: Create Virtual Environment
+### Core Database Models
 
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
-
-### Step 3: Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Step 4: Initialize Database
-
-```bash
-python manage.py migrate
-```
-
-### Step 5: Create Superuser (Optional)
-
-```bash
-python manage.py createsuperuser
-```
-
-Then access admin panel at `http://localhost:8000/admin`
-
----
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
-# Required: OpenAI API key for AI feedback generation
-OPENAI_API_KEY=sk-your-key-here
-
-# Optional: Django secret key (auto-generated if not set)
-SECRET_KEY=your-secret-key-here
-
-# Optional: Database URL (defaults to SQLite)
-DATABASE_URL=sqlite:///db.sqlite3
-
-# Optional: Debug mode (set to False in production)
-DEBUG=True
-
-# Optional: Allowed hosts (comma-separated)
-ALLOWED_HOSTS=localhost,127.0.0.1,159.65.240.114
-
-# Optional: CORS settings
-CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://159.65.240.114
-```
-
-### Django Settings
-
-Key configuration in `stemscribe/settings.py`:
-
-```python
-# Enable/disable AI features
-USE_OPENAI_API = True  # Set to False for demo mode
-
-# Document upload settings
-MAX_UPLOAD_SIZE = 5_000_000  # 5MB
-
-# Supported file formats
-SUPPORTED_FORMATS = ['txt', 'pdf', 'docx']
-
-# Peer review section types
-SECTION_CHOICES = [
-    'introduction', 'method', 'results', 'discussion', 'conclusion', 'custom'
-]
-
-# AI scoring dimensions for peer feedback
-FEEDBACK_SCORING_DIMENSIONS = {
-    'specificity': 'Is the feedback detailed and specific?',
-    'constructiveness': 'Is it balanced and actionable?',
-    'scientific_accuracy': 'Is it technically correct?'
-}
-```
-
----
-
-## Quick Start
-
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Run migrations
-python manage.py migrate
-
-# 3. Set your OpenAI API key
-export OPENAI_API_KEY=sk-your-key-here
-
-# 4. Start the development server
-python manage.py runserver
-
-# 5. Open in browser
-# http://127.0.0.1:8000
-```
-
-### Demo Accounts
-
-Register with any email/password combination, or use these examples:
-
-| Role | Email | Password | Notes |
-|------|-------|----------|-------|
-| Student | student@imperial.ac.uk | demo1234 | Can submit reports, give peer feedback |
-| Teacher | teacher@imperial.ac.uk | demo1234 | Dashboard, rubric, peer oversight |
-
-**Important:** Registration creates new accounts automatically. Both students and teachers register and select their role during signup.
-
----
-
-## Features & Workflows
-
-### 1. Student Report Submission & Analysis
-
-**Entry Point:** `/student/submit/`
-
-#### Submission Methods
-
-- **Paste:** Copy-paste text directly into textarea
-- **Upload:** .txt, .pdf, .docx files (max 5MB)
-- **URL:** Link to external document (future feature)
-
-#### Document Processing
-
-1. Student submits report
-2. Django extracts text (handles PDF/DOCX conversion)
-3. OpenAI Claude API analyzes report against three dimensions:
-   - **Understanding:** Comprehension of concepts, proper definitions, theoretical grounding
-   - **Analysis:** Critical thinking, data interpretation, methodology soundness
-   - **Communication:** Clarity, organization, grammar, scientific writing conventions
-4. AI returns:
-   - Overall score (0–100) for each dimension
-   - Detailed issues with exact line numbers and suggestions
-   - Color-coded highlights (red = critical, yellow = minor, green = suggestions)
-
-#### Feedback Review
-
-Student views the highlighted report with inline issue marks. For each issue:
-- Click to expand detail and suggestion
-- Approve: Applies suggested change, creates new DocumentVersion (version_type='ai_feedback')
-- Reject: Dismisses issue without action
-- Edit: Manually modify the suggestion before approving
-
-#### Version Tracking
-
-Every approval action creates a new `DocumentVersion` with:
-- Full document content post-edits
-- AI scores from that analysis session
-- Metadata: timestamp, version type, editor
-
-Students can browse version history and compare scores across submissions.
-
----
-
-### 2. Peer Review System
-
-**Core Concept:** Quality-assured peer feedback through AI review before submission.
-
-#### Peer Contribution Workflow
-
-**Step 1: Student Shares a Section**
-- Entry Point: `/student/analysis/<doc_id>/share-section/`
-- Student selects section type (Introduction, Method, Results, Discussion, Conclusion, or Custom)
-- Optional: Include a guiding question for reviewers (e.g., "Does my methodology clearly justify my approach?")
-- Click "Share for peer review"
-- Creates `PeerShareRequest` record with `is_open=True`
-
-**Step 2: Peers Discover Requests**
-- Entry Point: `/peer/feed/`
-- Students browse all open peer requests from classmates
-- Filter by section type or class
-- Click to review a specific request
-
-**Step 3: Peer Submits Draft Feedback**
-- Entry Point: `/peer/review/<share_id>/`
-- Peer reads the shared section + optional author question
-- Types feedback in textarea (encouraged to be specific, constructive, actionable)
-- Clicks "Save & review with AI"
-- Creates `PeerFeedback` record with `is_submitted=False` (draft state)
-
-**Step 4: AI Review & Scoring**
-- Backend calls `_score_peer_feedback()` function
-- OpenAI Claude analyzes the peer's feedback on:
-  - **Specificity** (0–100): Is it detailed? Does it point to specific phrases/issues?
-  - **Constructiveness** (0–100): Is it balanced? Does it offer improvement suggestions?
-  - **Scientific Accuracy** (0–100): Is the feedback technically correct?
-- Calculates overall `ai_contribution_score` as average of three dimensions
-- Generates `ai_feedback_text` with specific suggestions to improve the peer's feedback
-- Sets `ai_feedback_generated=True`, `scored=True`
-
-**Step 5: Peer Reviews AI Suggestions & Edits**
-- Peer returns to same page and sees:
-  - Their draft feedback in a box
-  - AI scores with dimension breakdown
-  - AI suggestions (e.g., "You could be more specific about which methods need justification")
-- Peer can:
-  - Click "Edit feedback" → `/peer/edit/<feedback_id>/`
-  - Revise based on AI suggestions
-  - Click "Save & re-score ✨" to get new AI scoring
-
-**Step 6: Peer Submits Final Feedback**
-- Once satisfied, peer clicks "Send to student →"
-- Sets `is_submitted=True`
-- Feedback now appears in student's document view (read-only from peer perspective)
-- Peer can no longer edit once submitted
-
-#### Peer Activity Dashboard
-- Entry Point: `/peer/activity/`
-- Shows:
-  - **Feedback Given:** All submitted feedback with AI scores and edit links for drafts
-  - **Feedback Received:** All feedback from peers on student's shared sections
-  - **Average Score:** Overall peer contribution score (average of all submitted feedback scores)
-- Incentivizes quality contributions through visible scoring
-
----
-
-### 3. Student Document View & Collaboration
-
-**Entry Point:** `/student/analysis/<doc_id>/`
-
-#### Document Display
-
-- Full report text with proper formatting (paragraphs, line breaks preserved)
-- Section headers auto-detected and formatted
-- In-context feedback panels:
-  - AI feedback with issue details and suggestions
-  - Peer feedback (submitted) with contributor scores and "View thread" link
-  - Teacher comments with edit/delete options (teachers only)
-
-#### Actions Available
-
-- **Edit inline:** Click "Edit & revise" to modify report sections
-- **Download:** Export formatted report to PDF/DOCX
-- **View versions:** Sidebar shows version history with score progression
-- **Peer thread:** Click feedback to view full peer review thread with all responses
-
-#### Version History
-
-Sidebar shows:
-- Version count and creation date
-- Overall score trend (visualization)
-- Clickable versions to compare scores side-by-side
-
----
-
-### 4. Teacher Dashboard & Oversight
-
-#### Dashboard Overview
-- Entry Point: `/teacher/dashboard/`
-- Statistics tab: Class-wide metrics (average scores, engagement stats)
-- Student list with flags:
-  - Red: Low participation or struggling students
-  - Green: Top collaborators and high performers
-
-#### Per-Student View
-- Entry Point: `/teacher/student/<student_id>/`
-- All documents and versions for a specific student
-- All peer feedback they've received (with contributor info)
-- Teacher comments (add, edit, delete)
-- Score breakdown by Understanding/Analysis/Communication
-
-#### Peer Feedback Oversight
-- Entry Point: `/teacher/peer-overview/`
-- Leaderboard: Class rankings by peer contribution score
-- Activity log: Timestamp, reviewer, reviewee, section, feedback quality score
-- Identify: Top peer reviewers, at-risk students (low feedback quality), disengaged students
-
-#### Rubric Management
-- Entry Point: `/teacher/rubric/`
-- Add/edit/delete custom criteria under each pillar:
-  - Understanding (conceptual, definitions, theory)
-  - Analysis (critical thinking, data interpretation)
-  - Communication (clarity, organization, grammar)
-- Criteria feed AI prompts for analysis (customizable per class)
-
-#### Class Upload
-- Entry Point: `/teacher/upload/`
-- Bulk upload student documents (CSV of emails + document files)
-- Useful for batch loading lab reports at semester start
-
----
-
 ## Database Schema
 
 ### Core Models
@@ -470,92 +241,423 @@ All endpoints require login. Django sessions handle authentication.
 | POST | `/logout/` | Logout (redirects to landing) |
 | GET | `/admin/` | Django admin (superuser only) |
 
----
-
-## AI Scoring Details
-
-### Report Analysis Prompt
-
-When a student submits a report, the system calls OpenAI with:
-
-```
-Analyze this STEM lab report on three dimensions:
-
-1. Understanding (0–100): 
-   - Does the student grasp key concepts?
-   - Are definitions correct and properly cited?
-   - Is theory grounded in course material?
-
-2. Analysis (0–100):
-   - Is reasoning sound and logical?
-   - Are data interpretations supported?
-   - Is methodology scientifically rigorous?
-
-3. Communication (0–100):
-   - Is writing clear and well-organized?
-   - Are figures/tables properly labeled?
-   - Does it follow scientific writing conventions?
-
-For each issue found, specify:
-- Line/paragraph reference
-- Type: critical/minor/suggestion
-- Specific suggestion for improvement
-
-Return JSON: {
-  "understanding_score": N,
-  "analysis_score": N,
-  "communication_score": N,
-  "issues": [{"line": "", "type": "", "suggestion": ""}]
-}
 ```
 
-### Peer Feedback Scoring Prompt
+**Key Models:**
+- **UserProfile:** Connects users to roles (Student/Teacher) and class assignments
+- **Document:** Container for all versions of a student's report
+- **DocumentVersion:** Immutable historical record with AI scores and issue tracking
+- **PeerShareRequest:** Manages which document sections are shared for peer review
+- **PeerFeedback:** Peer feedback with draft/submitted status and AI quality scores
+- **RubricCriterion:** Teacher-defined grading criteria per pillar
+- **TeacherComment:** Teacher annotations on student documents
 
-When a peer submits feedback, the system calls OpenAI with:
 
-```
-Score this peer feedback on a STEM student's work:
+## Installation & Setup Instructions
 
-Original section: [author's text]
-Peer feedback: [peer's feedback]
+### System Requirements
 
-Rate on three dimensions (0–100 each):
+- **Python:** 3.8 or higher
+- **Database:** SQLite (included) or PostgreSQL for production
+- **OS:** macOS, Linux, Windows (WSL recommended)
+- **Git:** For cloning the repository
 
-1. Specificity: Is it detailed? Does it point to specific phrases/examples?
-2. Constructiveness: Is it balanced? Does it offer actionable improvements?
-3. Scientific Accuracy: Is the feedback technically correct?
+### Step 1: Clone the Repository
 
-Also provide:
-- Summary: One sentence on the overall contribution
-- Suggestions: How could this peer improve their feedback? (if score < 80)
-
-Return JSON: {
-  "specificity": N,
-  "constructiveness": N,
-  "scientific_accuracy": N,
-  "overall_score": N,  # Average of three
-  "summary": "",
-  "suggestions": ""
-}
+```bash
+git clone https://github.com/manishsharmatimilsina/stemscribe.git
+cd stemscribe/stemscribe
 ```
 
----
+### Step 2: Create Virtual Environment
 
-## Deployment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+# On Windows: venv\Scripts\activate
+```
 
-### Local Development
+### Step 3: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+# Required
+OPENAI_API_KEY=sk-your-key-here
+
+# Optional
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///db.sqlite3
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
+### Step 5: Initialize Database
+
+```bash
+python manage.py migrate
+```
+
+### Step 6: Create Superuser (Optional)
+
+```bash
+python manage.py createsuperuser
+```
+
+Access the admin panel at `http://localhost:8000/admin`
+
+### Step 7: Run Development Server
 
 ```bash
 python manage.py runserver
-# Runs on http://127.0.0.1:8000 with auto-reload
 ```
 
-### Production Deployment (Linux/Ubuntu)
+Visit **http://127.0.0.1:8000** in your browser.
 
-#### Option 1: Systemd Service
+### Demo Accounts
 
+| Role | Email | Password |
+|------|-------|----------|
+| Student | student@imperial.ac.uk | demo1234 |
+| Teacher | teacher@imperial.ac.uk | demo1234 |
+
+**Note:** Registration creates accounts automatically. Both students and teachers register and select their role during signup.
+
+---
+
+## Usage Guide
+
+### 1. Student Workflow: Report Submission & Analysis
+
+#### Submission
+- **Entry Point:** `/student/submit/`
+- **Methods:** Paste text, upload (.txt, .pdf, .docx), or link to external document
+- **Max file size:** 5MB
+
+#### AI Analysis & Feedback
+1. Report submitted → Django extracts text (handles PDF/DOCX conversion)
+2. OpenAI  analyzes on three dimensions:
+   - **Understanding:** Concept comprehension, definitions, theory grounding
+   - **Analysis:** Critical thinking, data interpretation, methodology soundness
+   - **Communication:** Clarity, organization, writing conventions
+3. AI returns:
+   - Overall score (0–100) for each dimension
+   - Detailed issues with line numbers and specific suggestions
+   - Color-coded highlights (red=critical, yellow=minor, green=suggestions)
+
+     <img width="2822" height="1534" alt="image" src="https://github.com/user-attachments/assets/96e3d8cc-4e2e-41e9-9968-aa27da787286" />
+
+#### Feedback Review
+- Click issues to expand details
+- **Approve:** Applies suggestion, creates new DocumentVersion
+- **Reject:** Dismisses issue without action
+- **Edit:** Modify suggestion before approving
+
+
+#### Version Tracking
+- Browse version history showing score progression
+- Compare versions side-by-side
+- See full edit timeline with timestamps
+
+<img width="2848" height="1508" alt="image" src="https://github.com/user-attachments/assets/9da85a0e-8e7b-4df7-a933-84535a8cd1d7" />
+
+---
+
+### 2. Peer Review System
+
+**Core Concept:** Quality-assured peer feedback through AI review before reaching the student.
+
+#### Step-by-Step Workflow
+
+**Step 1: Share a Section for Review**
+- **Entry Point:** `/student/analysis/<doc_id>/share-section/`
+- Select section type: Introduction, Method, Results, Discussion, Conclusion, or Custom
+- Optionally include a guiding question for reviewers
+- Creates `PeerShareRequest` with `is_open=True`
+
+  <img width="2398" height="1468" alt="image" src="https://github.com/user-attachments/assets/f871c3d3-8366-40dd-bb90-5e24273afe04" />
+
+
+**Step 2: Peers Discover Requests**
+- **Entry Point:** `/peer/feed/`
+- Browse all open peer requests from classmates
+- Filter by section type or class
+
+
+
+**Step 3: Peer Submits Initial Feedback**
+- **Entry Point:** `/peer/review/<share_id>/`
+- Read shared section and optional author question
+- Type feedback in textarea
+- Click "Save & review with AI"
+- Creates `PeerFeedback` record in draft state
+
+<img width="2118" height="1546" alt="image" src="https://github.com/user-attachments/assets/b0e257a5-eed9-4976-a5e7-2dda4e79b04c" />
+
+
+**Step 4: AI Quality Scoring**
+Backend analyzes peer feedback on:
+- **Specificity (0–100):** Is it detailed? Does it point to specific phrases?
+- **Constructiveness (0–100):** Is it balanced and actionable?
+- **Scientific Accuracy (0–100):** Is it technically correct?
+
+Overall `ai_contribution_score` calculated as average of three dimensions.
+
+**Step 5: Peer Reviews AI Suggestions & Edits**
+- Peer sees draft feedback, AI scores, and improvement suggestions
+- **Edit feedback:** `/peer/edit/<feedback_id>/`
+- Revise based on AI suggestions
+- Click "Save & re-score" for new AI scoring
+- Process repeats until satisfied
+
+**Step 6: Submit Final Feedback**
+- Click "Send to student"
+- Sets `is_submitted=True`
+- Feedback now appears in student's document view (read-only)
+- Peer can no longer edit once submitted
+
+  <img width="1564" height="1332" alt="image" src="https://github.com/user-attachments/assets/a1365eaa-58c2-4247-9175-9df5e90f7285" />
+
+
+#### Peer Activity Dashboard
+- **Entry Point:** `/peer/activity/`
+- View all feedback given (with AI scores and edit links for drafts)
+- View feedback received on your shared sections
+- See your average contribution score
+- Public leaderboard incentivizes quality contributions
+
+<img width="2030" height="1496" alt="image" src="https://github.com/user-attachments/assets/286f46d6-0249-4613-a741-23a561d4fa80" />
+
+---
+
+### 3. Teacher Dashboard & Oversight
+
+#### Dashboard Overview
+- **Entry Point:** `/teacher/dashboard/`
+- Class-wide statistics (average scores, engagement metrics)
+- Student list with performance flags (red=struggling, green=top performers)
+
+#### Per-Student Management
+- **Entry Point:** `/teacher/student/<student_id>/`
+- View all documents and versions for a student
+- See all peer feedback they've received
+- Add/edit/delete teacher comments
+- Review score breakdown by dimension
+
+#### Peer Feedback Oversight
+- **Entry Point:** `/teacher/peer-overview/`
+- Class leaderboard by peer contribution score
+- Activity log with timestamps, reviewers, sections, quality scores
+- Identify top peer reviewers and disengaged students
+
+  <img width="2868" height="1446" alt="image" src="https://github.com/user-attachments/assets/55f67f29-55ba-4616-8632-5119546faf4c" />
+
+
+#### Custom Rubric Management
+- **Entry Point:** `/teacher/rubric/`
+- Add/edit/delete criteria under each pillar:
+  - Understanding (conceptual grasp, definitions, theory)
+  - Analysis (critical thinking, data interpretation)
+  - Communication (clarity, organization, grammar)
+- Criteria feed AI analysis prompts (customizable per class)
+
+  
+
+
+#### Bulk Document Upload
+- **Entry Point:** `/teacher/upload/`
+- Upload multiple student documents via CSV
+- Useful for batch-loading lab reports at semester start
+
+---
+
+### 4. Collaborative Document View
+
+- **Entry Point:** `/student/analysis/<doc_id>/`
+- Full report with preserved formatting
+- Inline feedback panels from AI and peers
+- View teacher comments (teachers can edit/delete)
+- **Actions:** Edit inline, download as PDF/DOCX, view version history
+
+---
+
+
+## API Endpoints Reference
+
+### Student Endpoints
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/student/dashboard/` | Personal stats and quick links |
+| GET/POST | `/student/submit/` | Upload or paste new report |
+| GET | `/student/analysis/<doc_id>/` | View report with feedback |
+| POST | `/student/analysis/<doc_id>/save-revision/` | Save inline edits |
+| POST | `/student/analysis/<doc_id>/download/` | Export report as file |
+| GET/POST | `/student/analysis/<doc_id>/share-section/` | Share section for peer review |
+| GET/POST | `/student/version/<doc_id>/` | View and compare versions |
+
+### Peer Endpoints
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/peer/feed/` | Browse open peer requests |
+| GET/POST | `/peer/review/<share_id>/` | Submit feedback |
+| POST | `/peer/review/<share_id>/?action=submit` | Submit drafted feedback |
+| GET/POST | `/peer/edit/<feedback_id>/` | Edit drafted feedback |
+| POST | `/peer/close/<share_id>/` | Author closes peer request |
+| GET | `/peer/activity/` | View contribution stats |
+
+### Teacher Endpoints
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/teacher/dashboard/` | Class statistics and student flags |
+| GET | `/teacher/student/<student_id>/` | Per-student overview |
+| GET | `/teacher/peer-overview/` | Peer feedback leaderboard |
+| GET/POST | `/teacher/rubric/` | Manage custom criteria |
+| GET/POST | `/teacher/upload/` | Bulk upload documents |
+
+### Authentication Endpoints
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/` | Landing page |
+| GET/POST | `/register/` | New account creation |
+| GET/POST | `/login/` | Login |
+| POST | `/logout/` | Logout |
+
+---
+
+## Links
+
+### Live Deployment
+
+🌐 **[Visit StemScribe](http://159.65.240.114:1005/)**
+
+### Demo Video
+
+📹 **[View Demo Video]** *(Link to be added)*
+
+---
+
+## Team Member Details & Contribution
+
+### Aimma Shahzad (4th Year, Medicine)
+- **Role:** Co-Founder & Product Designer
+- **Contributions:**
+  - Product vision and strategy
+  - User research and workflow design
+  - Peer feedback system architecture
+  - Stakeholder management and user testing
+
+### Akshara Suresh (2nd Year, Medicine)
+- **Role:** Co-Founder & QA Lead
+- **Contributions:**
+  - Peer review system development
+  - Platform testing and validation
+  - User feedback integration
+  - Documentation and user guides
+
+### Manish Sharma Timilsina (Postgraduate, Chemical Engineering)
+- **Role:** Technical Lead & Full-Stack Developer
+- **Contributions:**
+  - Full-stack architecture design
+  - Django backend development
+  - Frontend implementation
+  - OpenAI API integration
+  - Database schema and deployment
+  - DevOps and server configuration
+
+---
+
+## License Information
+
+This project is developed for **Imperial College London STEM education** purposes.
+
+### Project License
+
+The overall project license should be defined by the project maintainers. The third-party technologies used in this project are governed by their own licenses, listed below.
+
+### Third-Party Licenses
+
+| Technology | License | License Type |
+|---|---|---|
+| Python | Python Software Foundation License (PSF) | Permissive; free for commercial use |
+| Django | BSD 3-Clause License | Permissive; free for commercial use |
+| PostgreSQL | PostgreSQL License | Permissive; free for commercial use; no copyleft obligations |
+| OpenAI API | Commercial / Proprietary | Pay-per-use API service governed by OpenAI’s Terms of Service |
+
+### Notes
+
+- Python, Django, and PostgreSQL are open-source technologies with permissive licenses.
+- The OpenAI API is a commercial service and is subject to OpenAI’s pricing, usage policies, and Terms of Service.
+- This project does not redistribute OpenAI models or proprietary OpenAI software.
+- Users and maintainers should ensure compliance with all applicable third-party license terms when deploying, modifying, or distributing this project.
+---
+
+## Development & Contributing
+
+### Project Structure
+```
+stemscribe/
+├── manage.py                    # Django management script
+├── requirements.txt             # Python dependencies
+├── db.sqlite3                   # Local database
+├── stemscribe/                  # Project settings
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── core/                        # Main application
+│   ├── models.py                # 7 core models
+│   ├── views.py                 # 30+ view functions
+│   ├── urls.py
+│   ├── migrations/              # Database schema versions
+│   └── templates/core/          # HTML templates
+├── static/                      # CSS, JS, images
+└── venv/                        # Virtual environment
+```
+
+### Adding a Feature
+
+1. Define model in `core/models.py`
+2. Create migration: `python manage.py makemigrations`
+3. Apply migration: `python manage.py migrate`
+4. Write view in `core/views.py`
+5. Add URL to `core/urls.py`
+6. Create template in `core/templates/core/`
+7. Test locally before deployment
+
+### Running Tests
+
+```bash
+python manage.py test core
+python manage.py test core.tests.StudentViewTests
+python manage.py test core.tests.PeerFeedbackTests
+```
+
+### Debugging
+
+Enable verbose logging in `settings.py`:
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'loggers': {'django': {'handlers': ['console'], 'level': 'DEBUG'}},
+}
+```
+
+Then tail logs:
+```bash
+python manage.py runserver 2>&1 | grep -E "(ERROR|WARNING)"
+```
+
+### Production Deployment
+
+**Systemd Service:**
 Create `/etc/systemd/system/stemscribe.service`:
-
 ```ini
 [Unit]
 Description=StemScribe Django App
@@ -575,28 +677,13 @@ WantedBy=multi-user.target
 ```
 
 Then:
-
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl start stemscribe
-sudo systemctl enable stemscribe  # Auto-start on boot
+sudo systemctl enable stemscribe
 ```
 
-#### Option 2: Docker (Future)
-
-```dockerfile
-FROM python:3.10
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-RUN python manage.py migrate
-EXPOSE 8000
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "stemscribe.wsgi:application"]
-```
-
-#### Nginx Configuration
-
+**Nginx Configuration:**
 ```nginx
 server {
     listen 80;
@@ -614,109 +701,7 @@ server {
 }
 ```
 
-#### Database Migration
-
-On production server:
-
-```bash
-cd /home/django/stemscribe
-git pull origin main
-python manage.py migrate
-python manage.py collectstatic --noinput
-systemctl restart stemscribe
-```
-
----
-
-## Development
-
-### Project Structure
-
-```
-stemscribe/
-├── manage.py                    # Django management script
-├── requirements.txt             # Python dependencies
-├── db.sqlite3                   # Local database
-├── stemscribe/                  # Project configuration
-│   ├── settings.py              # Django settings
-│   ├── urls.py                  # Root URL routing
-│   └── wsgi.py                  # Production WSGI entry
-├── core/                        # Main application
-│   ├── models.py                # Database models (7 models)
-│   ├── views.py                 # Views (30+ functions)
-│   ├── urls.py                  # URL patterns
-│   ├── templatetags/
-│   │   └── stem_tags.py         # Custom template filters
-│   ├── migrations/              # Database schema versions
-│   │   ├── 0001_initial.py
-│   │   ├── 0002_peershare*.py
-│   │   ├── 0003_peerfeedback*.py
-│   │   └── 0004_*.py
-│   └── templates/core/
-│       ├── base.html            # Base shell with CSS
-│       ├── landing.html         # Homepage before login
-│       ├── registration.html    # Sign up form
-│       ├── student_base.html    # Student sidebar layout
-│       ├── student_submit.html  # Upload/paste form
-│       ├── student_analysis.html # Main report view
-│       ├── student_version.html # Version history
-│       ├── student_dashboard.html # Personal stats
-│       ├── peer_feed.html       # Peer request browser
-│       ├── peer_review.html     # Peer feedback form + AI review
-│       ├── peer_activity.html   # Contribution dashboard
-│       ├── edit_peer_feedback.html # Draft editing
-│       ├── teacher_base.html    # Teacher sidebar layout
-│       ├── teacher_dashboard.html
-│       ├── teacher_student.html
-│       ├── teacher_peer_overview.html
-│       ├── teacher_rubric.html
-│       ├── teacher_stats.html
-│       └── teacher_upload.html
-├── static/                      # CSS, JS, images
-│   └── css/
-│       └── style.css            # Design system (CSS variables)
-└── venv/                        # Virtual environment
-```
-
-### Adding a New Feature
-
-1. **Define model** in `core/models.py`
-2. **Create migration:** `python manage.py makemigrations`
-3. **Apply migration:** `python manage.py migrate`
-4. **Write view** in `core/views.py`
-5. **Add URL** to `core/urls.py`
-6. **Create template** in `core/templates/core/`
-7. **Test locally** before deployment
-
-### Running Tests
-
-```bash
-python manage.py test core
-python manage.py test core.tests.StudentViewTests
-python manage.py test core.tests.PeerFeedbackTests
-```
-
-### Debugging
-
-Enable verbose logging:
-
-```python
-# In settings.py
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {'console': {'class': 'logging.StreamHandler'}},
-    'loggers': {'django': {'handlers': ['console'], 'level': 'DEBUG'}},
-}
-```
-
-Then tail logs while developing:
-
-```bash
-python manage.py runserver 2>&1 | grep -E "(ERROR|WARNING)"
-```
-
-## Contributing
+### Contributing
 
 To contribute improvements:
 
@@ -726,129 +711,17 @@ To contribute improvements:
 4. Test thoroughly: `python manage.py test`
 5. Push to GitHub and create pull request
 
+---
 
+## Contact & Support
 
-## Contact
+Built for **Imperial College London** STEM education.
 
-Built for Imperial College London STEM education.  
-Questions? Open an issue on GitHub or email: m.sharma-timilsina25@imperial.ac.uk
+**Questions?** Open an issue on GitHub or email:
+📧 **m.sharma-timilsina25@imperial.ac.uk**
 
-## Core Features
+---
 
-### Student Workflow
+## Acknowledgments
 
-**1. Report Submission**
-- Paste or upload report (.txt, .pdf, .docx)
-- Edit inline before submission
-
-**2. AI Analysis**
-- OpenAI Claude API analyzes reports on Understanding / Analysis / Communication
-- Colour-coded highlight report with inline issue marks
-- Review and approve/reject each AI suggestion
-- Approved changes create new document versions automatically
-
-**3. Peer Feedback**
-- Share specific sections (Introduction, Method, Results, Discussion, Conclusion, Custom) with peers
-- Include optional question for reviewers
-- Browse all open peer requests in feed
-- Receive AI-scored feedback from peers
-- Track contribution stats and leaderboard ranking
-
-**4. Collaborative Editing**
-- View feedback from peers and teacher in document context
-- Edit and revise inline
-- Download formatted report as file
-- Version history with score progression
-
-### Peer Review System
-
-**Peer Contribution Workflow:**
-1. **Browse requests** — View all shared sections from classmates
-2. **Give feedback** — Submit initial feedback draft
-3. **AI review** — Claude scores feedback on:
-   - Specificity (is it detailed and specific?)
-   - Constructiveness (is it balanced and helpful?)
-   - Scientific accuracy (is it technically correct?)
-   - Overall contribution score (0–100)
-4. **Edit & improve** — Review AI suggestions and revise feedback
-5. **Submit** — Send final feedback to the student
-
-**Peer Activity Dashboard:**
-- View feedback you've given (with AI scores and suggestions)
-- View feedback you've received (with contributor scores)
-- Edit draft feedback before it reaches the student
-- Track your average contribution score
-
-### Teacher Dashboard
-
-**Peer Oversight:**
-- Class leaderboard showing peer contribution scores
-- Complete activity log of all peer feedback
-- Monitor peer feedback quality and engagement
-- View individual student contribution stats
-
-**Student Management:**
-- Per-student view of documents, versions, and feedback
-- Add teacher comments on student work
-- View peer feedback received by each student
-- Track class statistics (Understanding / Analysis / Communication scores)
-- Custom rubric management (add, edit, delete criteria per pillar)
-
-## Models & Database
-
-```
-UserProfile          — User role (Student/Teacher) + class assignment
-Document             — Student report container
-DocumentVersion      — Individual versions with AI scores
-RubricCriterion      — Teacher-defined grading criteria
-PeerShareRequest     — Section shared for peer review
-PeerFeedback         — Peer feedback with draft/submitted status + AI scoring
-TeacherComment       — Teacher annotations on documents
-```
-
-## Architecture
-
-```
-stemscribe/
-├── manage.py
-├── requirements.txt
-├── stemscribe/
-│   ├── settings.py
-│   └── urls.py
-└── core/
-    ├── models.py
-    ├── views.py          # 30+ views for student/peer/teacher flows
-    ├── urls.py
-    ├── templatetags/
-    │   └── stem_tags.py  # Report formatting filters
-    └── templates/core/
-        ├── landing.html
-        ├── registration.html
-        ├── student_base.html
-        ├── student_submit.html
-        ├── student_analysis.html
-        ├── student_version.html
-        ├── student_dashboard.html
-        ├── peer_feed.html
-        ├── peer_review.html
-        ├── peer_activity.html
-        ├── edit_peer_feedback.html
-        ├── teacher_base.html
-        ├── teacher_dashboard.html
-        ├── teacher_stats.html
-        ├── teacher_student.html
-        ├── teacher_rubric.html
-        ├── teacher_upload.html
-        ├── teacher_peer_overview.html
-        └── [more templates]
-```
-
-## API Integration
-
-**OpenAI Claude:**
-- Report analysis (Understanding / Analysis / Communication scores)
-- Peer feedback quality scoring (Specificity / Constructiveness / Scientific Accuracy)
-- AI suggestions to improve peer feedback
-- Uses Python's built-in `urllib` — no extra dependencies
-
-Set `OPENAI_API_KEY` as environment variable. Required for full functionality.
+Special thanks to Imperial College London for supporting this project and the STEM student community for invaluable feedback during development.
