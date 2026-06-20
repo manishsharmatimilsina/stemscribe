@@ -117,7 +117,7 @@
         <div class="fc-card" style="border-left:3px solid var(--accent-mid)">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
             <div class="fc-type" style="background:#eaf3de;color:#3a6b1a;margin-bottom:0">
-              Peer — {{ fb.share_request.get_section_label_display }}
+              Peer — {{ fb.share_request.section_label|default:"Shared excerpt" }}
             </div>
             <div style="display:flex;align-items:center;gap:.5rem">
               {% if fb.scored %}

@@ -26,7 +26,7 @@
       <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:.75rem">
         <div style="display:flex;justify-content:space-between;margin-bottom:.4rem">
           <span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px">
-            {{ fb.share_request.get_section_label_display }}
+            {{ fb.share_request.section_label|default:"Shared excerpt" }}
           </span>
           <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y" }}</span>
         </div>
@@ -92,7 +92,7 @@
       <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:.75rem">
         <div style="display:flex;justify-content:space-between;margin-bottom:.4rem">
           <span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px">
-            {{ fb.share_request.get_section_label_display }}
+            {{ fb.share_request.section_label|default:"Shared excerpt" }}
           </span>
           <span style="font-size:11px;color:var(--text-muted)">{{ fb.created_at|date:"j M Y" }}</span>
         </div>
