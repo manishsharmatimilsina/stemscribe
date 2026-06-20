@@ -4,7 +4,11 @@ from core.translations import get_translations_for_language
 def language_processor(request):
     """Set language based on user preference."""
     if request.user.is_authenticated:
-        lang = request.user.profile.preferred_language
+        try:
+            lang = request.user.profile.preferred_language
+        except:
+            # User doesn't have a profile (e.g., admin user)
+            lang = translation.get_language()
         translation.activate(lang)
         request.session['_language'] = lang
     else:
